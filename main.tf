@@ -1,6 +1,8 @@
 locals {
-  name       = join("-", compact([var.cluster_name, var.name_suffix]))
-  short_name = substr(local.name, 0, 26) # Shorter name used to bypass 32 char limitation for target groups
+  # cluter name without region
+  short_cluster_name = replace(var.cluster_name, "-${data.aws_region.current.name}", "")
+  name               = join("-", compact([local.short_cluster_name, var.name_suffix]))
+  short_name         = substr(local.name, 0, 26) # Shorter name used to bypass 32 char limitation for target groups
 }
 
 resource "aws_lb" "nlb" {
