@@ -18,6 +18,10 @@ resource "aws_lb" "nlb" {
     "service.k8s.aws/resource" = "LoadBalancer"
     "service.k8s.aws/stack"    = var.application
   }
+
+  lifecycle {
+    ignore_changes = [ tags_all ]
+  }
 }
 
 resource "aws_lb_listener" "tls" {
@@ -35,6 +39,10 @@ resource "aws_lb_listener" "tls" {
     "elbv2.k8s.aws/cluster"    = var.cluster_name
     "service.k8s.aws/resource" = "443"
     "service.k8s.aws/stack"    = var.application
+  }
+
+  lifecycle {
+    ignore_changes = [ tags_all ]
   }
 }
 
@@ -58,6 +66,10 @@ resource "aws_lb_listener" "plain" {
     "elbv2.k8s.aws/cluster"    = var.cluster_name
     "service.k8s.aws/resource" = "80"
     "service.k8s.aws/stack"    = var.application
+  }
+
+  lifecycle {
+    ignore_changes = [ tags_all ]
   }
 }
 
@@ -89,6 +101,10 @@ resource "aws_lb_target_group" "tls" {
     enabled         = false
     type            = "source_ip"
   }
+
+  lifecycle {
+    ignore_changes = [ tags_all ]
+  }
 }
 
 resource "aws_lb_target_group" "plain" {
@@ -118,5 +134,9 @@ resource "aws_lb_target_group" "plain" {
     cookie_duration = 0
     enabled         = false
     type            = "source_ip"
+  }
+
+  lifecycle {
+    ignore_changes = [ tags_all ]
   }
 }
