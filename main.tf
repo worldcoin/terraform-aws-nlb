@@ -99,7 +99,7 @@ resource "aws_lb_target_group" "tls" {
   stickiness {
     cookie_duration = 0
     enabled         = false
-    type            = "source_ip"
+    type            = "lb_cookie"
   }
 
   lifecycle {
@@ -110,7 +110,7 @@ resource "aws_lb_target_group" "tls" {
 resource "aws_lb_target_group" "plain" {
   name     = "${local.short_name}-plain"
   port     = 60080
-  protocol = "TCP"
+  protocol = "HTTP"
   vpc_id   = var.vpc_id
 
   target_type = "ip"
@@ -133,7 +133,7 @@ resource "aws_lb_target_group" "plain" {
   stickiness {
     cookie_duration = 0
     enabled         = false
-    type            = "source_ip"
+    type            = "lb_cookie"
   }
 
   lifecycle {
