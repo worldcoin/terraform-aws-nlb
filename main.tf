@@ -27,7 +27,7 @@ resource "aws_lb" "nlb" {
 resource "aws_lb_listener" "tls" {
   load_balancer_arn = aws_lb.nlb.arn
   port              = "443"
-  protocol          = "TLS"
+  protocol          = "HTTPS"
   certificate_arn   = var.acm_arn
 
   default_action {
@@ -55,7 +55,7 @@ resource "aws_lb_listener_certificate" "extra" {
 resource "aws_lb_listener" "plain" {
   load_balancer_arn = aws_lb.nlb.arn
   port              = "80"
-  protocol          = "TCP"
+  protocol          = "HTTP"
 
   default_action {
     type             = "forward"
@@ -76,7 +76,7 @@ resource "aws_lb_listener" "plain" {
 resource "aws_lb_target_group" "tls" {
   name     = "${local.short_name}-tls"
   port     = 60443
-  protocol = "TCP"
+  protocol = "HTTPS"
   vpc_id   = var.vpc_id
 
   target_type = "ip"
@@ -91,8 +91,8 @@ resource "aws_lb_target_group" "tls" {
     enabled             = true
     healthy_threshold   = 3
     interval            = 10
-    port                = "traffic-port"
-    protocol            = "TCP"
+    port                = "9000"
+    protocol            = "HTTP"
     unhealthy_threshold = 3
   }
 
@@ -125,8 +125,8 @@ resource "aws_lb_target_group" "plain" {
     enabled             = true
     healthy_threshold   = 3
     interval            = 10
-    port                = "traffic-port"
-    protocol            = "TCP"
+    port                = "9000"
+    protocol            = "HTTP"
     unhealthy_threshold = 3
   }
 
