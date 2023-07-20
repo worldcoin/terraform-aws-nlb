@@ -39,3 +39,9 @@ variable "internal" {
   description = "Set NLB to be internal (available only within VPC)"
   type        = bool
 }
+
+variable "load_balancer_type" {
+  description = "The type of load balancer to create. (network/application/gateway)"
+  type        = string
+  default     = "network"
+}

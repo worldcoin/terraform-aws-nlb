@@ -8,7 +8,7 @@ locals {
 resource "aws_lb" "nlb" {
   name                             = substr(local.name, 0, 32) # "name" cannot be longer than 32 characters
   internal                         = var.internal
-  load_balancer_type               = "network"
+  load_balancer_type               = var.load_balancer_type
   subnets                          = var.public_subnets
   enable_cross_zone_load_balancing = true
   enable_deletion_protection       = true
@@ -20,7 +20,7 @@ resource "aws_lb" "nlb" {
   }
 
   lifecycle {
-    ignore_changes = [ tags_all ]
+    ignore_changes = [tags_all]
   }
 }
 
@@ -42,7 +42,7 @@ resource "aws_lb_listener" "tls" {
   }
 
   lifecycle {
-    ignore_changes = [ tags_all ]
+    ignore_changes = [tags_all]
   }
 }
 
@@ -69,7 +69,7 @@ resource "aws_lb_listener" "plain" {
   }
 
   lifecycle {
-    ignore_changes = [ tags_all ]
+    ignore_changes = [tags_all]
   }
 }
 
@@ -103,7 +103,7 @@ resource "aws_lb_target_group" "tls" {
   }
 
   lifecycle {
-    ignore_changes = [ tags_all ]
+    ignore_changes = [tags_all]
   }
 }
 
@@ -137,6 +137,6 @@ resource "aws_lb_target_group" "plain" {
   }
 
   lifecycle {
-    ignore_changes = [ tags_all ]
+    ignore_changes = [tags_all]
   }
 }
