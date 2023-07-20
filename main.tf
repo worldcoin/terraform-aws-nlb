@@ -97,7 +97,7 @@ resource "aws_lb_target_group" "tls" {
   }
 
   stickiness {
-    cookie_duration = 0
+    cookie_duration = 14400
     enabled         = false
     type            = "lb_cookie"
   }
@@ -131,7 +131,7 @@ resource "aws_lb_target_group" "plain" {
   }
 
   stickiness {
-    cookie_duration = 0
+    cookie_duration = 14400
     enabled         = false
     type            = "lb_cookie"
   }
