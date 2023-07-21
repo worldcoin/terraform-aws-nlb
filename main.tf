@@ -15,8 +15,8 @@ resource "aws_lb" "nlb" {
 
   tags = {
     "elbv2.k8s.aws/cluster"    = var.cluster_name
-    "service.k8s.aws/resource" = "LoadBalancer"
-    "service.k8s.aws/stack"    = var.application
+    "ingress.k8s.aws/resource" = "LoadBalancer"
+    "ingress.k8s.aws/stack"    = var.application
   }
 
   lifecycle {
@@ -37,8 +37,8 @@ resource "aws_lb_listener" "tls" {
 
   tags = {
     "elbv2.k8s.aws/cluster"    = var.cluster_name
-    "service.k8s.aws/resource" = "443"
-    "service.k8s.aws/stack"    = var.application
+    "ingress.k8s.aws/resource" = "443"
+    "ingress.k8s.aws/stack"    = var.application
   }
 
   lifecycle {
@@ -64,8 +64,8 @@ resource "aws_lb_listener" "plain" {
 
   tags = {
     "elbv2.k8s.aws/cluster"    = var.cluster_name
-    "service.k8s.aws/resource" = "80"
-    "service.k8s.aws/stack"    = var.application
+    "ingress.k8s.aws/resource" = "80"
+    "ingress.k8s.aws/stack"    = var.application
   }
 
   lifecycle {
@@ -83,8 +83,8 @@ resource "aws_lb_target_group" "tls" {
 
   tags = {
     "elbv2.k8s.aws/cluster"    = var.cluster_name
-    "service.k8s.aws/resource" = "${var.application}:443"
-    "service.k8s.aws/stack"    = var.application
+    "ingress.k8s.aws/resource" = "${var.application}:443"
+    "ingress.k8s.aws/stack"    = var.application
   }
 
   health_check {
@@ -117,8 +117,8 @@ resource "aws_lb_target_group" "plain" {
 
   tags = {
     "elbv2.k8s.aws/cluster"    = var.cluster_name
-    "service.k8s.aws/resource" = "${var.application}:80"
-    "service.k8s.aws/stack"    = var.application
+    "ingress.k8s.aws/resource" = "${var.application}:80"
+    "ingress.k8s.aws/stack"    = var.application
   }
 
   health_check {
