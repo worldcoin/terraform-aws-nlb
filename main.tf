@@ -79,7 +79,7 @@ resource "aws_lb_target_group" "tls" {
   protocol = "HTTPS"
   vpc_id   = var.vpc_id
 
-  target_type = "ip"
+  target_type = "instance"
 
   tags = {
     "elbv2.k8s.aws/cluster"    = var.cluster_name
@@ -113,7 +113,7 @@ resource "aws_lb_target_group" "plain" {
   protocol = "HTTP"
   vpc_id   = var.vpc_id
 
-  target_type = "ip"
+  target_type = "instance"
 
   tags = {
     "elbv2.k8s.aws/cluster"    = var.cluster_name
