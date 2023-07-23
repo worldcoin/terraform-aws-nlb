@@ -3,6 +3,7 @@ locals {
   short_cluster_name = replace(var.cluster_name, "-${data.aws_region.current.name}", "")
   name               = join("-", compact([local.short_cluster_name, var.name_suffix]))
   short_name         = substr(local.name, 0, 26) # Shorter name used to bypass 32 char limitation for target groups
+  stack              = replace(var.application, "/", ".")
 }
 
 resource "aws_lb" "nlb" {
@@ -16,7 +17,7 @@ resource "aws_lb" "nlb" {
   tags = {
     "elbv2.k8s.aws/cluster"    = var.cluster_name
     "ingress.k8s.aws/resource" = "LoadBalancer"
-    "ingress.k8s.aws/stack"    = var.application
+    "ingress.k8s.aws/stack"    = local.stack
   }
 
   lifecycle {
@@ -38,7 +39,7 @@ resource "aws_lb_listener" "tls" {
   tags = {
     "elbv2.k8s.aws/cluster"    = var.cluster_name
     "ingress.k8s.aws/resource" = "443"
-    "ingress.k8s.aws/stack"    = var.application
+    "ingress.k8s.aws/stack"    = local.stack
   }
 
   lifecycle {
@@ -65,7 +66,7 @@ resource "aws_lb_listener" "plain" {
   tags = {
     "elbv2.k8s.aws/cluster"    = var.cluster_name
     "ingress.k8s.aws/resource" = "80"
-    "ingress.k8s.aws/stack"    = var.application
+    "ingress.k8s.aws/stack"    = local.stack
   }
 
   lifecycle {
@@ -84,7 +85,7 @@ resource "aws_lb_target_group" "tls" {
   tags = {
     "elbv2.k8s.aws/cluster"    = var.cluster_name
     "ingress.k8s.aws/resource" = "${var.application}:443"
-    "ingress.k8s.aws/stack"    = var.application
+    "ingress.k8s.aws/stack"    = local.stack
   }
 
   health_check {
@@ -118,7 +119,7 @@ resource "aws_lb_target_group" "plain" {
   tags = {
     "elbv2.k8s.aws/cluster"    = var.cluster_name
     "ingress.k8s.aws/resource" = "${var.application}:80"
-    "ingress.k8s.aws/stack"    = var.application
+    "ingress.k8s.aws/stack"    = local.stack
   }
 
   health_check {
