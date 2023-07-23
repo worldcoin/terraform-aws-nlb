@@ -6,11 +6,17 @@ locals {
   stack              = replace(var.application, "/", ".")
 }
 
+resource "aws_security_group" "alb" {
+  name        = local.name
+  description = "Security group attached to ALB"
+}
+
 resource "aws_lb" "nlb" {
   name                             = substr(local.name, 0, 32) # "name" cannot be longer than 32 characters
   internal                         = var.internal
   load_balancer_type               = var.load_balancer_type
   subnets                          = var.public_subnets
+  security_groups                  = [aws_security_group.alb.id]
   enable_cross_zone_load_balancing = true
   enable_deletion_protection       = true
 

@@ -20,3 +20,8 @@ output "zone_id" {
   description = "The zone ID of the NLB."
   value       = aws_lb.nlb.zone_id
 }
+
+output "sg_id" {
+  description = "Security Group attached to loadbalancer"
+  value       = aws_security_group.alb.id
+}
