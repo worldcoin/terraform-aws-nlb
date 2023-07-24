@@ -9,6 +9,7 @@ locals {
 resource "aws_security_group" "alb" {
   name        = local.name
   description = "Security group attached to ALB"
+  vpc_id      = var.vpc_id
 
   egress {
     from_port   = 0
