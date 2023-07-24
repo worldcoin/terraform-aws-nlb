@@ -25,3 +25,13 @@ output "sg_id" {
   description = "Security Group attached to loadbalancer"
   value       = aws_security_group.alb.id
 }
+
+output "target_group_tls_arn" {
+  description = "ARN of TLS target group"
+  value       = aws_lb_target_group.tls.arn
+}
+
+output "target_group_plain_arn" {
+  description = "ARN of plain target group"
+  value       = aws_lb_target_group.plain.arn
+}
