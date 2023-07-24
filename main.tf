@@ -98,7 +98,7 @@ resource "aws_lb_target_group" "tls" {
 
   tags = {
     "elbv2.k8s.aws/cluster"    = var.cluster_name
-    "ingress.k8s.aws/resource" = "${var.application}:443"
+    "ingress.k8s.aws/resource" = "${var.application}-traefik:443"
     "ingress.k8s.aws/stack"    = local.stack
   }
 
@@ -132,7 +132,7 @@ resource "aws_lb_target_group" "plain" {
 
   tags = {
     "elbv2.k8s.aws/cluster"    = var.cluster_name
-    "ingress.k8s.aws/resource" = "${var.application}:80"
+    "ingress.k8s.aws/resource" = "${var.application}-traefik:80"
     "ingress.k8s.aws/stack"    = local.stack
   }
 
