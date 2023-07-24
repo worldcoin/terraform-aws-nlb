@@ -91,7 +91,7 @@ resource "aws_lb_listener" "plain" {
 resource "aws_lb_target_group" "tls" {
   name     = "${local.short_name}-tls"
   port     = 30443
-  protocol = "HTTPS"
+  protocol = "HTTP"
   vpc_id   = var.vpc_id
 
   target_type = "instance"
