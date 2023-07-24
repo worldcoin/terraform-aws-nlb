@@ -102,15 +102,6 @@ resource "aws_lb_target_group" "tls" {
     "ingress.k8s.aws/stack"    = local.stack
   }
 
-  health_check {
-    enabled             = true
-    healthy_threshold   = 3
-    interval            = 10
-    port                = "9000"
-    protocol            = "HTTP"
-    unhealthy_threshold = 3
-  }
-
   stickiness {
     cookie_duration = 14400
     enabled         = false
@@ -134,15 +125,6 @@ resource "aws_lb_target_group" "plain" {
     "elbv2.k8s.aws/cluster"    = var.cluster_name
     "ingress.k8s.aws/resource" = "${var.application}-traefik:80"
     "ingress.k8s.aws/stack"    = local.stack
-  }
-
-  health_check {
-    enabled             = true
-    healthy_threshold   = 3
-    interval            = 10
-    port                = "9000"
-    protocol            = "HTTP"
-    unhealthy_threshold = 3
   }
 
   stickiness {
