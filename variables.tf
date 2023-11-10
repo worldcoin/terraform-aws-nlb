@@ -40,7 +40,7 @@ variable "internal" {
   type        = bool
 }
 
-variable "additional_listeners" {
+variable "extra_listeners" {
   description = "List with configuration for additional listeners"
   type = list(object({
     name              = string

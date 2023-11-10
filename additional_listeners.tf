@@ -1,5 +1,5 @@
-resource "aws_lb_listener" "additional" {
-  for_each = { for v in var.additional_listeners : v.name => v }
+resource "aws_lb_listener" "extra" {
+  for_each = { for v in var.extra_listeners : v.name => v }
 
   load_balancer_arn = aws_lb.nlb.arn
   port              = each.value.port
@@ -7,7 +7,7 @@ resource "aws_lb_listener" "additional" {
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.additional[each.value.name].arn
+    target_group_arn = aws_lb_target_group.extra[each.value.name].arn
   }
 
   tags = {
@@ -21,8 +21,8 @@ resource "aws_lb_listener" "additional" {
   }
 }
 
-resource "aws_lb_target_group" "additional" {
-  for_each = { for v in var.additional_listeners : v.name => v }
+resource "aws_lb_target_group" "extra" {
+  for_each = { for v in var.extra_listeners : v.name => v }
 
   name = format("%s-%s", local.short_name, each.value.name)
 
