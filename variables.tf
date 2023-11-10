@@ -39,3 +39,15 @@ variable "internal" {
   description = "Set NLB to be internal (available only within VPC)"
   type        = bool
 }
+
+variable "extra_listeners" {
+  description = "List with configuration for additional listeners"
+  type = list(object({
+    name              = string
+    port              = string
+    protocol          = optional(string, "TCP")
+    target_group_port = number
+  }))
+
+  default = []
+}
