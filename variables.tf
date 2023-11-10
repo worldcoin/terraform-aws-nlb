@@ -41,7 +41,7 @@ variable "internal" {
 }
 
 variable "additional_listeners" {
-  description = "value"
+  description = "List with configuration for additional listeners"
   type = list(object({
     name              = string
     port              = string
