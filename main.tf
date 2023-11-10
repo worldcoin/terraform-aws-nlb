@@ -13,14 +13,12 @@ resource "aws_lb" "nlb" {
   enable_cross_zone_load_balancing = true
   enable_deletion_protection       = true
 
-  tags = {
-    "elbv2.k8s.aws/cluster"    = var.cluster_name
+  tags = merge(local.default_tags, {
     "service.k8s.aws/resource" = "LoadBalancer"
-    "service.k8s.aws/stack"    = var.application
-  }
+  })
 
   lifecycle {
-    ignore_changes = [ tags_all ]
+    ignore_changes = [tags_all]
   }
 }
 
@@ -35,14 +33,12 @@ resource "aws_lb_listener" "tls" {
     target_group_arn = aws_lb_target_group.tls.arn
   }
 
-  tags = {
-    "elbv2.k8s.aws/cluster"    = var.cluster_name
+  tags = merge(local.default_tags, {
     "service.k8s.aws/resource" = "443"
-    "service.k8s.aws/stack"    = var.application
-  }
+  })
 
   lifecycle {
-    ignore_changes = [ tags_all ]
+    ignore_changes = [tags_all]
   }
 }
 
@@ -62,14 +58,12 @@ resource "aws_lb_listener" "plain" {
     target_group_arn = aws_lb_target_group.plain.arn
   }
 
-  tags = {
-    "elbv2.k8s.aws/cluster"    = var.cluster_name
+  tags = merge(local.default_tags, {
     "service.k8s.aws/resource" = "80"
-    "service.k8s.aws/stack"    = var.application
-  }
+  })
 
   lifecycle {
-    ignore_changes = [ tags_all ]
+    ignore_changes = [tags_all]
   }
 }
 
@@ -81,11 +75,9 @@ resource "aws_lb_target_group" "tls" {
 
   target_type = "ip"
 
-  tags = {
-    "elbv2.k8s.aws/cluster"    = var.cluster_name
+  tags = merge(local.default_tags, {
     "service.k8s.aws/resource" = "${var.application}:443"
-    "service.k8s.aws/stack"    = var.application
-  }
+  })
 
   health_check {
     enabled             = true
@@ -103,7 +95,7 @@ resource "aws_lb_target_group" "tls" {
   }
 
   lifecycle {
-    ignore_changes = [ tags_all ]
+    ignore_changes = [tags_all]
   }
 }
 
@@ -115,11 +107,9 @@ resource "aws_lb_target_group" "plain" {
 
   target_type = "ip"
 
-  tags = {
-    "elbv2.k8s.aws/cluster"    = var.cluster_name
+  tags = merge(local.default_tags, {
     "service.k8s.aws/resource" = "${var.application}:80"
-    "service.k8s.aws/stack"    = var.application
-  }
+  })
 
   health_check {
     enabled             = true
@@ -137,6 +127,6 @@ resource "aws_lb_target_group" "plain" {
   }
 
   lifecycle {
-    ignore_changes = [ tags_all ]
+    ignore_changes = [tags_all]
   }
 }

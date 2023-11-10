@@ -10,11 +10,9 @@ resource "aws_lb_listener" "extra" {
     target_group_arn = aws_lb_target_group.extra[each.value.name].arn
   }
 
-  tags = {
-    "elbv2.k8s.aws/cluster"    = var.cluster_name
+  tags = merge(local.default_tags, {
     "service.k8s.aws/resource" = each.value.port
-    "service.k8s.aws/stack"    = var.application
-  }
+  })
 
   lifecycle {
     ignore_changes = [tags_all]
@@ -32,11 +30,9 @@ resource "aws_lb_target_group" "extra" {
 
   target_type = "ip"
 
-  tags = {
-    "elbv2.k8s.aws/cluster"    = var.cluster_name
+  tags = merge(local.default_tags, {
     "service.k8s.aws/resource" = format("%s:%s", var.application, each.value.port)
-    "service.k8s.aws/stack"    = var.application
-  }
+  })
 
   health_check {
     enabled             = true
