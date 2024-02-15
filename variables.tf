@@ -51,3 +51,15 @@ variable "extra_listeners" {
 
   default = []
 }
+
+variable "tls_health_check_port" {
+    description = "Port used for health check for TLS listener"
+    type        = string
+    default     = "traffic-port"
+}
+
+variable "plain_health_check_port" {
+    description = "Port used for health check for plain listener"
+    type        = string
+    default     = "traffic-port"
+}
