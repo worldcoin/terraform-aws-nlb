@@ -51,3 +51,9 @@ variable "extra_listeners" {
 
   default = []
 }
+
+variable "health_check_port" {
+    description = "Port used for health check for listener"
+    type        = string
+    default     = "traffic-port"
+}
