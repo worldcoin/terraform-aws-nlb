@@ -83,7 +83,7 @@ resource "aws_lb_target_group" "tls" {
     enabled             = true
     healthy_threshold   = 3
     interval            = 10
-    port                = var.tls_health_check_port
+    port                = var.health_check_port
     protocol            = "TCP"
     unhealthy_threshold = 3
   }
@@ -115,7 +115,7 @@ resource "aws_lb_target_group" "plain" {
     enabled             = true
     healthy_threshold   = 3
     interval            = 10
-    port                = var.plain_health_check_port
+    port                = var.health_check_port
     protocol            = "TCP"
     unhealthy_threshold = 3
   }
