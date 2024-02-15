@@ -53,7 +53,7 @@ variable "extra_listeners" {
 }
 
 variable "health_check_port" {
-    description = "Port used for health check for listener"
-    type        = string
-    default     = "traffic-port"
+  description = "Port used for health check for listener"
+  type        = number
+  default     = -1
 }
