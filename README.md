@@ -58,8 +58,9 @@ No modules.
 | <a name="input_application"></a> [application](#input\_application) | (namespace/app) - Name of application which will be connected to this NLB | `string` | n/a | yes |
 | <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Name of the cluster will be used as suffix to all resources | `string` | n/a | yes |
 | <a name="input_extra_listeners"></a> [extra\_listeners](#input\_extra\_listeners) | List with configuration for additional listeners | <pre>list(object({<br>    name              = string<br>    port              = string<br>    protocol          = optional(string, "TCP")<br>    target_group_port = number<br>  }))</pre> | `[]` | no |
-| <a name="input_health_check_port"></a> [health\_check\_port](#input\_health\_check\_port) | Port used for health check for listener | `string` | `"traffic-port"` | no |
+| <a name="input_health_check_port"></a> [health\_check\_port](#input\_health\_check\_port) | Port used for health check for listener | `number` | `-1` | no |
 | <a name="input_internal"></a> [internal](#input\_internal) | Set NLB to be internal (available only within VPC) | `bool` | n/a | yes |
+| <a name="input_name"></a> [name](#input\_name) | Name of the NLB, overrides default naming | `string` | `""` | no |
 | <a name="input_name_suffix"></a> [name\_suffix](#input\_name\_suffix) | Part of the name used to differentiate NLBs for multiple traefik instances | `string` | `""` | no |
 | <a name="input_public_subnets"></a> [public\_subnets](#input\_public\_subnets) | List of public subnets to use | `list(string)` | n/a | yes |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | VPC ID where the NLB will be deployed | `string` | n/a | yes |

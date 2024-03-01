@@ -3,6 +3,12 @@ variable "cluster_name" {
   type        = string
 }
 
+variable "name" {
+  description = "Name of the NLB, overrides default naming"
+  type        = string
+  default     = ""
+}
+
 variable "application" {
   description = "(namespace/app) - Name of application which will be connected to this NLB"
   type        = string
