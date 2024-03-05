@@ -28,6 +28,8 @@ resource "aws_lb_listener" "tls" {
   protocol          = "TLS"
   certificate_arn   = var.acm_arn
 
+  ssl_policy = var.tls_listener_version == "1.3" ? "ELBSecurityPolicy-TLS13-1-3-2021-06" : "ELBSecurityPolicy-TLS13-1-2-Res-2021-06"
+
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.tls.arn
