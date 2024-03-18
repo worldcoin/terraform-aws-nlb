@@ -17,8 +17,13 @@ resource "aws_lb" "nlb" {
     "service.k8s.aws/resource" = "LoadBalancer"
   })
 
+  security_groups = length(var.security_groups) < 1 ? [aws_security_group.nlb[0].id] : var.security_groups
+
   lifecycle {
-    ignore_changes = [tags_all]
+    ignore_changes = [
+      tags_all,
+      security_groups, # changing security groups forces recreation, and we don't want it
+    ]
   }
 }
 
@@ -41,6 +46,48 @@ resource "aws_lb_listener" "tls" {
 
   lifecycle {
     ignore_changes = [tags_all]
+  }
+}
+
+resource "aws_security_group" "nlb" {
+  count       = length(var.security_groups) < 1 ? 1 : 0
+  name        = substr(local.name, 0, 32)
+  description = "SG attached to NLB ${local.name}"
+  vpc_id      = var.vpc_id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port        = 443
+    to_port          = 443
+    protocol         = "tcp"
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port        = 80
+    to_port          = 80
+    protocol         = "tcp"
+    ipv6_cidr_blocks = ["::/0"]
   }
 }
 

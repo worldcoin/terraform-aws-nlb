@@ -73,3 +73,9 @@ variable "tls_listener_version" {
     error_message = "Only TLS >= 1.2 or 1.3 are supported"
   }
 }
+
+variable "security_groups" {
+  description = "List of security groups to attach to the NLB, instead of creating default one"
+  type        = list(string)
+  default     = []
+}
