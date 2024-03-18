@@ -20,3 +20,8 @@ output "zone_id" {
   description = "The zone ID of the NLB."
   value       = aws_lb.nlb.zone_id
 }
+
+output "ssl_policy" {
+  description = "SSL Policy attached to loadbalancer"
+  value       = aws_lb_listener.tls.ssl_policy
+}
