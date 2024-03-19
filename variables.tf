@@ -76,11 +76,33 @@ variable "tls_listener_version" {
 variable "ingress_sg_rules" {
   description = "The security group rules to allow ingress from."
   type = set(object({
-    description     = optional(string, "")
-    protocol        = optional(string, "tcp")
-    port            = optional(number, 443)
-    security_groups = optional(list(string))
-    cidr_blocks     = optional(list(string))
+    description      = optional(string, "")
+    protocol         = optional(string, "tcp")
+    port             = optional(number, 443)
+    security_groups  = optional(list(string))
+    cidr_blocks      = optional(list(string))
+    ipv6_cidr_blocks = optional(list(string))
   }))
-  default = []
+  default = [
+    {
+      cidr_blocks = ["0.0.0.0/0"]
+      description = "allow http from anywhere"
+      port        = 80
+    },
+    {
+      ipv6_cidr_blocks = ["::/0"]
+      description      = "allow http from anywhere"
+      port             = 80
+    },
+    {
+      cidr_blocks = ["0.0.0.0/0"]
+      description = "allow https from anywhere"
+      port        = 443
+    },
+    {
+      ipv6_cidr_blocks = ["::/0"]
+      description      = "allow https from anywhere"
+      port             = 443
+    },
+  ]
 }
