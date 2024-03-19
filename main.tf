@@ -17,8 +17,13 @@ resource "aws_lb" "nlb" {
     "service.k8s.aws/resource" = "LoadBalancer"
   })
 
+  security_groups = [aws_security_group.nlb.id]
+
   lifecycle {
-    ignore_changes = [tags_all]
+    ignore_changes = [
+      tags_all,
+      security_groups, # changing security groups forces recreation, and we don't want it
+    ]
   }
 }
 
@@ -41,6 +46,35 @@ resource "aws_lb_listener" "tls" {
 
   lifecycle {
     ignore_changes = [tags_all]
+  }
+}
+
+resource "aws_security_group" "nlb" {
+  name        = substr(local.name, 0, 32)
+  description = format("SG for %s", local.name)
+  vpc_id      = var.vpc_id
+
+  dynamic "ingress" {
+    for_each = var.ingress_sg_rules
+
+    content {
+      description      = ingress.value["description"]
+      from_port        = ingress.value["port"]
+      to_port          = ingress.value["port"]
+      protocol         = ingress.value["protocol"]
+      security_groups  = ingress.value["security_groups"]
+      cidr_blocks      = ingress.value["cidr_blocks"]
+      ipv6_cidr_blocks = ingress.value["ipv6_cidr_blocks"]
+    }
+  }
+
+  #tfsec:ignore:aws-vpc-no-public-egress-sgr
+  egress {
+    description = "Allow all for egress"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
