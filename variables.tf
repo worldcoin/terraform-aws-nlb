@@ -73,9 +73,14 @@ variable "tls_listener_version" {
     error_message = "Only TLS >= 1.2 or 1.3 are supported"
   }
 }
-
-variable "security_groups" {
-  description = "List of security groups to attach to the NLB, instead of creating default one"
-  type        = list(string)
-  default     = []
+variable "ingress_sg_rules" {
+  description = "The security group rules to allow ingress from."
+  type = set(object({
+    description     = optional(string, "")
+    protocol        = optional(string, "tcp")
+    port            = optional(number, 443)
+    security_groups = optional(list(string))
+    cidr_blocks     = optional(list(string))
+  }))
+  default = []
 }
