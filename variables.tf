@@ -33,6 +33,13 @@ variable "vpc_id" {
 variable "public_subnets" {
   description = "List of public subnets to use"
   type        = list(string)
+  default     = null
+}
+
+variable "private_subnets" {
+  description = "List of private subnets to use"
+  type        = list(string)
+  default     = null
 }
 
 variable "name_suffix" {

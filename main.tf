@@ -9,7 +9,7 @@ resource "aws_lb" "nlb" {
   name                             = substr(local.name, 0, 32) # "name" cannot be longer than 32 characters
   internal                         = var.internal
   load_balancer_type               = "network"
-  subnets                          = var.public_subnets
+  subnets                          = var.private_subnets != null ? var.private_subnets : var.public_subnets
   enable_cross_zone_load_balancing = true
   enable_deletion_protection       = true
 
