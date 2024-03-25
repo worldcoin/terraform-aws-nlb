@@ -25,3 +25,8 @@ output "ssl_policy" {
   description = "SSL Policy attached to loadbalancer"
   value       = aws_lb_listener.tls.ssl_policy
 }
+
+output "sg_nlb_id" {
+  description = "The ID of the security group attached to NLB"
+  value       = aws_security_group.nlb.id
+}
