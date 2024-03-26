@@ -11,7 +11,7 @@ resource "aws_lb" "nlb" {
   load_balancer_type               = "network"
   subnets                          = var.private_subnets != null ? var.private_subnets : var.public_subnets
   enable_cross_zone_load_balancing = true
-  enable_deletion_protection       = true
+  enable_deletion_protection       = var.enable_deletion_protection
 
   tags = merge(local.default_tags, {
     "service.k8s.aws/resource" = "LoadBalancer"

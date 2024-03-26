@@ -58,6 +58,7 @@ No modules.
 | <a name="input_acm_extra_arns"></a> [acm\_extra\_arns](#input\_acm\_extra\_arns) | ARNs of ACM certificates used for TLS, attached as additional certificates to the main NLB | `list(string)` | `[]` | no |
 | <a name="input_application"></a> [application](#input\_application) | (namespace/app) - Name of application which will be connected to this NLB | `string` | n/a | yes |
 | <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Name of the cluster will be used as suffix to all resources | `string` | n/a | yes |
+| <a name="input_enable_deletion_protection"></a> [enable\_deletion\_protection](#input\_enable\_deletion\_protection) | If true, deletion of the load balancer will be disabled via the AWS API | `bool` | `true` | no |
 | <a name="input_extra_listeners"></a> [extra\_listeners](#input\_extra\_listeners) | List with configuration for additional listeners | <pre>list(object({<br>    name              = string<br>    port              = string<br>    protocol          = optional(string, "TCP")<br>    target_group_port = number<br>  }))</pre> | `[]` | no |
 | <a name="input_health_check_port"></a> [health\_check\_port](#input\_health\_check\_port) | Port used for health check for listener | `number` | `-1` | no |
 | <a name="input_ingress_sg_rules"></a> [ingress\_sg\_rules](#input\_ingress\_sg\_rules) | The security group rules to allow ingress from. | <pre>set(object({<br>    description      = optional(string, "")<br>    protocol         = optional(string, "tcp")<br>    port             = optional(number, 443)<br>    security_groups  = optional(list(string))<br>    cidr_blocks      = optional(list(string))<br>    ipv6_cidr_blocks = optional(list(string))<br>  }))</pre> | <pre>[<br>  {<br>    "cidr_blocks": [<br>      "0.0.0.0/0"<br>    ],<br>    "description": "allow http from anywhere",<br>    "port": 80<br>  },<br>  {<br>    "description": "allow http from anywhere",<br>    "ipv6_cidr_blocks": [<br>      "::/0"<br>    ],<br>    "port": 80<br>  },<br>  {<br>    "cidr_blocks": [<br>      "0.0.0.0/0"<br>    ],<br>    "description": "allow https from anywhere",<br>    "port": 443<br>  },<br>  {<br>    "description": "allow https from anywhere",<br>    "ipv6_cidr_blocks": [<br>      "::/0"<br>    ],<br>    "port": 443<br>  }<br>]</pre> | no |
@@ -76,6 +77,7 @@ No modules.
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the NLB. |
 | <a name="output_dns_name"></a> [dns\_name](#output\_dns\_name) | The DNS name of the NLB. |
 | <a name="output_ready"></a> [ready](#output\_ready) | Hack! Because modules with providers (cluster-apps) cannot use depends\_on output value needs to be used to make sure those are provisioned in correct order. |
+| <a name="output_sg_nlb_id"></a> [sg\_nlb\_id](#output\_sg\_nlb\_id) | The ID of the security group attached to NLB |
 | <a name="output_ssl_policy"></a> [ssl\_policy](#output\_ssl\_policy) | SSL Policy attached to loadbalancer |
 | <a name="output_zone_id"></a> [zone\_id](#output\_zone\_id) | The zone ID of the NLB. |
 <!-- END_TF_DOCS -->
