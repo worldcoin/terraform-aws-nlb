@@ -91,7 +91,7 @@ resource "aws_lb_listener_certificate" "extra" {
 }
 
 moved {
-  from = aws_lb_listener.plan
+  from = aws_lb_listener.plain
   to   = aws_lb_listener.plain[0]
 }
 
@@ -116,7 +116,13 @@ resource "aws_lb_listener" "plain" {
   }
 }
 
+moved {
+  from = aws_lb_target_group.tls
+  to   = aws_lb_target_group.tls[0]
+}
 resource "aws_lb_target_group" "tls" {
+  count = var.create_default_listeners ? 1 : 0
+
   name     = "${local.short_name}-tls"
   port     = 60443
   protocol = "TCP"
@@ -148,7 +154,13 @@ resource "aws_lb_target_group" "tls" {
   }
 }
 
+moved {
+  from = aws_lb_target_group.plain
+  to   = aws_lb_target_group.plain[0]
+}
 resource "aws_lb_target_group" "plain" {
+  count = var.create_default_listeners ? 1 : 0
+
   name     = "${local.short_name}-plain"
   port     = 60080
   protocol = "TCP"

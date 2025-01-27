@@ -1,8 +1,8 @@
 output "ready" {
   description = "Hack! Because modules with providers (cluster-apps) cannot use depends_on output value needs to be used to make sure those are provisioned in correct order."
   value = {
-    tls   = var.create_default_listeners ? "${aws_lb_listener.tls[0].arn}:${aws_lb_target_group.tls.id}" : ""
-    plain = var.create_default_listeners ? "${aws_lb_listener.plain[0].arn}:${aws_lb_target_group.plain.id}" : ""
+    tls   = var.create_default_listeners ? "${aws_lb_listener.tls[0].arn}:${aws_lb_target_group[0].tls.id}" : ""
+    plain = var.create_default_listeners ? "${aws_lb_listener.plain[0].arn}:${aws_lb_target_group[0].plain.id}" : ""
   }
 }
 
