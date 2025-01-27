@@ -43,7 +43,7 @@ resource "aws_lb_listener" "tls" {
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.tls.arn
+    target_group_arn = aws_lb_target_group.tls[0].arn
   }
 
   tags = merge(local.default_tags, {
@@ -104,7 +104,7 @@ resource "aws_lb_listener" "plain" {
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.plain.arn
+    target_group_arn = aws_lb_target_group.plain[0].arn
   }
 
   tags = merge(local.default_tags, {
