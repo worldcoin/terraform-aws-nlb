@@ -27,7 +27,13 @@ resource "aws_lb" "nlb" {
   }
 }
 
+moved {
+  from = aws_lb_listener.tls
+  to   = aws_lb_listener.tls[0]
+}
 resource "aws_lb_listener" "tls" {
+  count = var.add_default_listeners ? 1 : 0
+
   load_balancer_arn = aws_lb.nlb.arn
   port              = "443"
   protocol          = "TLS"
@@ -84,7 +90,14 @@ resource "aws_lb_listener_certificate" "extra" {
   certificate_arn = element(var.acm_extra_arns, count.index)
 }
 
+moved {
+  from = aws_lb_listener.plan
+  to   = aws_lb_listener.plain[0]
+}
+
 resource "aws_lb_listener" "plain" {
+  count = var.add_default_listeners ? 1 : 0
+
   load_balancer_arn = aws_lb.nlb.arn
   port              = "80"
   protocol          = "TCP"
