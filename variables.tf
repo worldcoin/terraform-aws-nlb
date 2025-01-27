@@ -12,7 +12,7 @@ variable "name" {
   type        = string
   default     = ""
   validation {
-    condition     = can(regex("^[a-z0-9-]+$", var.name))
+    condition     = var.name == "" ? true : can(regex("^[a-z0-9-]+$", var.name))
     error_message = "Name must be lowercase alphanumeric characters or hyphens"
   }
 }
@@ -79,7 +79,7 @@ variable "name_suffix" {
   type        = string
   default     = ""
   validation {
-    condition     = can(regex("^[a-z0-9-]+$", var.name_suffix))
+    condition     = var.name_suffix == "" ? true : can(regex("^[a-z0-9-]+$", var.name_suffix))
     error_message = "Name suffix must be lowercase alphanumeric characters or hyphens"
   }
 }
