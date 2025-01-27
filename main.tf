@@ -85,7 +85,7 @@ resource "aws_security_group" "nlb" {
 }
 
 resource "aws_lb_listener_certificate" "extra" {
-  count           = length(var.acm_extra_arns)
+  count           = var.add_default_listeners ? length(var.acm_extra_arns) : 0
   listener_arn    = aws_lb_listener.tls.arn
   certificate_arn = element(var.acm_extra_arns, count.index)
 }

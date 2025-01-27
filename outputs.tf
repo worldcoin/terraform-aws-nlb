@@ -1,8 +1,8 @@
 output "ready" {
   description = "Hack! Because modules with providers (cluster-apps) cannot use depends_on output value needs to be used to make sure those are provisioned in correct order."
   value = {
-    tls   = "${aws_lb_listener.tls.arn}:${aws_lb_target_group.tls.id}"
-    plain = "${aws_lb_listener.plain.arn}:${aws_lb_target_group.plain.id}"
+    tls   = var.add_default_listeners ? "${aws_lb_listener.tls.arn}:${aws_lb_target_group.tls.id}" : ""
+    plain = var.add_default_listeners ? "${aws_lb_listener.plain.arn}:${aws_lb_target_group.plain.id}" : ""
   }
 }
 
@@ -23,7 +23,7 @@ output "zone_id" {
 
 output "ssl_policy" {
   description = "SSL Policy attached to loadbalancer"
-  value       = aws_lb_listener.tls.ssl_policy
+  value       = var.add_default_listeners ? aws_lb_listener.tls.ssl_policy : null
 }
 
 output "sg_nlb_id" {
