@@ -32,7 +32,7 @@ moved {
   to   = aws_lb_listener.tls[0]
 }
 resource "aws_lb_listener" "tls" {
-  count = var.add_default_listeners ? 1 : 0
+  count = var.create_default_listeners ? 1 : 0
 
   load_balancer_arn = aws_lb.nlb.arn
   port              = "443"
@@ -85,7 +85,7 @@ resource "aws_security_group" "nlb" {
 }
 
 resource "aws_lb_listener_certificate" "extra" {
-  count           = var.add_default_listeners ? length(var.acm_extra_arns) : 0
+  count           = var.create_default_listeners ? length(var.acm_extra_arns) : 0
   listener_arn    = aws_lb_listener.tls[0].arn
   certificate_arn = element(var.acm_extra_arns, count.index)
 }
@@ -96,7 +96,7 @@ moved {
 }
 
 resource "aws_lb_listener" "plain" {
-  count = var.add_default_listeners ? 1 : 0
+  count = var.create_default_listeners ? 1 : 0
 
   load_balancer_arn = aws_lb.nlb.arn
   port              = "80"
