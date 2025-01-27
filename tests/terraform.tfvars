@@ -3,7 +3,7 @@ acm_extra_arns = [
   "arn:aws:acm:ap-south-1:123412341234:certificate/aabbcc22-1312-abcd-qwer-1a2s3d4f5g6h",
   "arn:aws:acm:ap-south-1:123412341234:certificate/aabbcc33-1312-abcd-qwer-1a2s3d4f5g6h"
 ]
-application                = "app"
+application                = "namespace/app"
 cluster_name               = "some-cluster"
 enable_deletion_protection = "true"
 extra_listeners = [
@@ -36,9 +36,8 @@ ingress_sg_rules = [
     port             = 443
   },
 ]
-internal    = fasle
-name        = "nlb"
-name_suffix = "some-foo"
+internal = fasle
+name     = "nlb"
 private_subnets = [
   "subnet-2f2f2f2f2f2f2f2f",
   "subnet-3f3f3f3f3f3f3f3f"

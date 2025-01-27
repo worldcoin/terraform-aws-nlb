@@ -21,7 +21,7 @@ variable "application" {
   description = "(namespace/app) - Name of application which will be connected to this NLB"
   type        = string
   validation {
-    condition     = can(regex("^[a-z0-9-]+$", var.application))
+    condition     = can(regex("^[a-z0-9-\\/a-z0-9-]+$", var.application))
     error_message = "Application name must be lowercase alphanumeric characters or hyphens"
   }
 }
