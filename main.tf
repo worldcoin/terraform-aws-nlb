@@ -27,7 +27,13 @@ resource "aws_lb" "nlb" {
   }
 }
 
+moved {
+  from = aws_lb_listener.tls
+  to   = aws_lb_listener.tls[0]
+}
 resource "aws_lb_listener" "tls" {
+  count = var.create_default_listeners ? 1 : 0
+
   load_balancer_arn = aws_lb.nlb.arn
   port              = "443"
   protocol          = "TLS"
@@ -37,7 +43,7 @@ resource "aws_lb_listener" "tls" {
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.tls.arn
+    target_group_arn = aws_lb_target_group.tls[0].arn
   }
 
   tags = merge(local.default_tags, {
@@ -79,19 +85,26 @@ resource "aws_security_group" "nlb" {
 }
 
 resource "aws_lb_listener_certificate" "extra" {
-  count           = length(var.acm_extra_arns)
-  listener_arn    = aws_lb_listener.tls.arn
+  count           = var.create_default_listeners ? length(var.acm_extra_arns) : 0
+  listener_arn    = aws_lb_listener.tls[0].arn
   certificate_arn = element(var.acm_extra_arns, count.index)
 }
 
+moved {
+  from = aws_lb_listener.plain
+  to   = aws_lb_listener.plain[0]
+}
+
 resource "aws_lb_listener" "plain" {
+  count = var.create_default_listeners ? 1 : 0
+
   load_balancer_arn = aws_lb.nlb.arn
   port              = "80"
   protocol          = "TCP"
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.plain.arn
+    target_group_arn = aws_lb_target_group.plain[0].arn
   }
 
   tags = merge(local.default_tags, {
@@ -103,7 +116,13 @@ resource "aws_lb_listener" "plain" {
   }
 }
 
+moved {
+  from = aws_lb_target_group.tls
+  to   = aws_lb_target_group.tls[0]
+}
 resource "aws_lb_target_group" "tls" {
+  count = var.create_default_listeners ? 1 : 0
+
   name     = "${local.short_name}-tls"
   port     = 60443
   protocol = "TCP"
@@ -135,7 +154,13 @@ resource "aws_lb_target_group" "tls" {
   }
 }
 
+moved {
+  from = aws_lb_target_group.plain
+  to   = aws_lb_target_group.plain[0]
+}
 resource "aws_lb_target_group" "plain" {
+  count = var.create_default_listeners ? 1 : 0
+
   name     = "${local.short_name}-plain"
   port     = 60080
   protocol = "TCP"

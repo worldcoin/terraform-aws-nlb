@@ -89,6 +89,12 @@ variable "internal" {
   type        = bool
 }
 
+variable "create_default_listeners" {
+  description = "If true, default listeners (80,443) will be created"
+  type        = bool
+  default     = true
+}
+
 variable "extra_listeners" {
   description = "List with configuration for additional listeners"
   type = list(object({
