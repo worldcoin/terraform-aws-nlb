@@ -90,7 +90,7 @@ variable "internal" {
 }
 
 variable "create_default_listeners" {
-  description = "If true, default listeners (80,442) will be created"
+  description = "If true, default listeners (80,443) will be created"
   type        = bool
   default     = true
 }
