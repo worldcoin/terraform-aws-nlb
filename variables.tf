@@ -111,7 +111,7 @@ variable "extra_listeners" {
         can(regex("^[a-z0-9-]+$", listener.name)) &&
         can(regex("^[0-9]+$", listener.port)) &&
         can(regex("^[0-9]+$", listener.target_group_port)) &&
-        (listener.protocol == "TCP" || listener.protocol == "UDP")
+        (listener.protocol == "TCP" || listener.protocol == "UDP" || listener.protocol == "TCP_UDP" || listener.protocol == "TLS")
     )])
     error_message = "Listener name must be lowercase alphanumeric characters"
   }
