@@ -186,5 +186,5 @@ variable "ingress_sg_rules" {
 variable "enable_deletion_protection" {
   description = "If true, deletion of the load balancer will be disabled via the AWS API"
   type        = bool
-  default     = true
+  default     = false
 }
