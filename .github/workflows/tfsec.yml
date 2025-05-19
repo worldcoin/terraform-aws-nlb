@@ -7,7 +7,7 @@ on:
 jobs:
   tfsec:
     name: tfsec
-    runs-on: ubuntu-latest
+    runs-on: arc-large-amd64-runner
 
     permissions:
       contents: read
@@ -20,5 +20,5 @@ jobs:
       - name: tfsec
         uses: aquasecurity/tfsec-pr-commenter-action@7a44c5dcde5dfab737363e391800629e27b6376b
         with:
-          tfsec_version: v1.28.1
+          tfsec_version: v1.28.14
           github_token: ${{ github.token }}
