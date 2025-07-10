@@ -38,7 +38,7 @@ resource "aws_lb_target_group" "extra" {
     enabled             = true
     healthy_threshold   = 3
     interval            = 10
-    port                = "traffic-port"
+    port                = each.value.target_group_port
     protocol            = "TCP"
     unhealthy_threshold = 3
   }
