@@ -4,10 +4,13 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   tfsec:
     name: tfsec
-    runs-on: arc-large-amd64-runner
+    runs-on: ubuntu-latest
 
     permissions:
       contents: read
