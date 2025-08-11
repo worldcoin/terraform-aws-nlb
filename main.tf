@@ -6,7 +6,7 @@ locals {
 }
 
 resource "aws_lb" "nlb" {
-  name                             = substr(local.name, 0, 32) # "name" cannot be longer than 32 characters
+  name                             = trimsuffix(substr(local.name, 0, 32), "-") # "name" cannot be longer than 32 characters and cannot end with "-"
   internal                         = var.internal
   load_balancer_type               = "network"
   subnets                          = length(var.private_subnets) > 0 ? var.private_subnets : var.public_subnets
