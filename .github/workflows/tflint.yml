@@ -11,7 +11,7 @@ jobs:
   tflint:
     name: tflint
     runs-on:
-      group: arc-public-medium-arm64-runner
+      group: arc-public-2xlarge-arm64-runner
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683

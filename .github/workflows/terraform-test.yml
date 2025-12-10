@@ -5,7 +5,7 @@ on: [pull_request]
 jobs:
   test:
     runs-on:
-      group: arc-public-large-arm64-runner
+      group: arc-public-2xlarge-arm64-runner
     steps:
       - name: Check out code
         uses: actions/checkout@master
