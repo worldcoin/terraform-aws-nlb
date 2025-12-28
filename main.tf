@@ -1,6 +1,6 @@
 locals {
   # cluter name without region
-  short_cluster_name = replace(var.cluster_name, "-${data.aws_region.current.name}", "")
+  short_cluster_name = replace(var.cluster_name, "-${data.aws_region.current.region}", "")
   name               = var.name == "" ? join("-", compact([local.short_cluster_name, var.name_suffix])) : var.name
   short_name         = substr(local.name, 0, 26) # Shorter name used to bypass 32 char limitation for target groups
 }
