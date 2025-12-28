@@ -32,7 +32,7 @@ moved {
   to   = aws_lb_listener.tls[0]
 }
 resource "aws_lb_listener" "tls" {
-  count = var.create_default_listeners ? 1 : 0
+  count = var.create_default_listeners && var.create_default_tls_listener ? 1 : 0
 
   load_balancer_arn = aws_lb.nlb.arn
   port              = "443"
@@ -96,7 +96,7 @@ moved {
 }
 
 resource "aws_lb_listener" "plain" {
-  count = var.create_default_listeners ? 1 : 0
+  count = var.create_default_listeners && var.create_default_plain_listener ? 1 : 0
 
   load_balancer_arn = aws_lb.nlb.arn
   port              = "80"

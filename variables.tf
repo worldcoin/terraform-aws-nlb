@@ -90,7 +90,19 @@ variable "internal" {
 }
 
 variable "create_default_listeners" {
-  description = "If true, default listeners (80,443) will be created"
+  description = "If true, default listeners will be created"
+  type        = bool
+  default     = true
+}
+
+variable "create_default_plain_listener" {
+  description = "If true, default listener (80) will be created (ANDed with create_default_listeners)"
+  type        = bool
+  default     = true
+}
+
+variable "create_default_tls_listener" {
+  description = "If true, tls listener (443) will be created (ANDed with create_default_listeners)"
   type        = bool
   default     = true
 }
