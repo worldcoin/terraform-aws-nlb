@@ -121,7 +121,7 @@ moved {
   to   = aws_lb_target_group.tls[0]
 }
 resource "aws_lb_target_group" "tls" {
-  count = var.create_default_listeners ? 1 : 0
+  count = var.create_default_listeners && var.create_default_tls_listener ? 1 : 0
 
   name     = "${local.short_name}-tls"
   port     = 60443
@@ -159,7 +159,7 @@ moved {
   to   = aws_lb_target_group.plain[0]
 }
 resource "aws_lb_target_group" "plain" {
-  count = var.create_default_listeners ? 1 : 0
+  count = var.create_default_listeners && var.create_default_plain_listener ? 1 : 0
 
   name     = "${local.short_name}-plain"
   port     = 60080
