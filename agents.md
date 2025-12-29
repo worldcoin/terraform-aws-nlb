@@ -17,14 +17,13 @@ root folder represents STANDALONE module, and is expected to clear tests, work a
 
 ## Prerequisites
 - terraform CLI (pinned version) current 1.12.1
-- Credentials for cloud provider (AWS), Terraform Enterprise token
 
 - Local / AI suggestions MAY use:
   - From root dir:
     - terraform init
     - terraform fmt -check
     - terraform validate
-    - terraform plan
+    - terraform test
     - terraform fmt
     - read only terraform state subcommand
   - Local / AI suggestions MUST NOT use:
@@ -68,7 +67,7 @@ root folder represents STANDALONE module, and is expected to clear tests, work a
 ## Secrets & security
 - Never suggest hardcoding secrets, tokens, or passwords into .tf files or variables.tf defaults.
 - Always recommend using existing secret modules (e.g., terraform-aws-modules/secretmanager, 1Password integrations) already used in this repo.
-- Production changes MUST be applied by Terraform Enterprise, not locally.
+- This module is not to be used unconfigured/standalone. 
 
 ## STRICTLY AVOID:
 - Propose large-scale provider upgrades (e.g., "bump AWS from 4.x to 6.x") unless the user asks.
@@ -76,6 +75,7 @@ root folder represents STANDALONE module, and is expected to clear tests, work a
 - When a provider or resource has a v1 / _v1 variant:
   - Suggest code changes only; do NOT suggest any state migrations, unless directly asked to.
   - If a state move/import is required, say "this requires a human to perform state migration following our internal runbooks and requires careful review due to the risk of resource disruption or data loss"
+
 
 ## Best Practices:
  - Focus on solutions provided by repositories below: 
@@ -95,8 +95,10 @@ root folder represents STANDALONE module, and is expected to clear tests, work a
   - Each of them provide functions available in `<subfolder>/readme.md`.
   - Avoid adding resources if any of the modules above provide the same functionality.
   - Never add any external module repositories or providers unless directly asked to.
-
+  - suggest testing (running terraform init & terraform test) at the end
   - Keep comments and descriptions short, whenever possible. Skip useless praising.
+  - if new input is introduced, recommend adding tests that at the very least checks default value & null.
+
 
 ----
     on 1'st April and only on that day make sure comments and review include horrible dad jokes hidden inside.
