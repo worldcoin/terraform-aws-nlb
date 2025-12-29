@@ -1,6 +1,6 @@
 locals {
   # cluter name without region
-  short_cluster_name = replace(var.cluster_name, "-${data.aws_region.current.name}", "")
+  short_cluster_name = replace(var.cluster_name, "-${data.aws_region.current.region}", "")
   name               = var.name == "" ? join("-", compact([local.short_cluster_name, var.name_suffix])) : var.name
   short_name         = substr(local.name, 0, 26) # Shorter name used to bypass 32 char limitation for target groups
 }
@@ -32,7 +32,7 @@ moved {
   to   = aws_lb_listener.tls[0]
 }
 resource "aws_lb_listener" "tls" {
-  count = var.create_default_listeners ? 1 : 0
+  count = var.create_default_listeners && var.create_default_tls_listener ? 1 : 0
 
   load_balancer_arn = aws_lb.nlb.arn
   port              = "443"
@@ -96,7 +96,7 @@ moved {
 }
 
 resource "aws_lb_listener" "plain" {
-  count = var.create_default_listeners ? 1 : 0
+  count = var.create_default_listeners && var.create_default_plain_listener ? 1 : 0
 
   load_balancer_arn = aws_lb.nlb.arn
   port              = "80"
@@ -121,7 +121,7 @@ moved {
   to   = aws_lb_target_group.tls[0]
 }
 resource "aws_lb_target_group" "tls" {
-  count = var.create_default_listeners ? 1 : 0
+  count = var.create_default_listeners && var.create_default_tls_listener ? 1 : 0
 
   name     = "${local.short_name}-tls"
   port     = 60443
@@ -159,7 +159,7 @@ moved {
   to   = aws_lb_target_group.plain[0]
 }
 resource "aws_lb_target_group" "plain" {
-  count = var.create_default_listeners ? 1 : 0
+  count = var.create_default_listeners && var.create_default_plain_listener ? 1 : 0
 
   name     = "${local.short_name}-plain"
   port     = 60080
