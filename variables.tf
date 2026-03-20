@@ -200,3 +200,15 @@ variable "enable_deletion_protection" {
   type        = bool
   default     = true
 }
+
+variable "tag_prefix" {
+  description = "Tag key prefix for LBC resource/stack tags (e.g. service.k8s.aws for Service LB, gateway.k8s.aws.nlb for Gateway API)"
+  type        = string
+  default     = "service.k8s.aws"
+}
+
+variable "tag_stack" {
+  description = "Override the computed stack tag value (default: var.application)"
+  type        = string
+  default     = ""
+}

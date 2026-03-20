@@ -11,7 +11,7 @@ resource "aws_lb_listener" "extra" {
   }
 
   tags = merge(local.default_tags, {
-    "service.k8s.aws/resource" = each.value.port
+    "${var.tag_prefix}/resource" = each.value.port
   })
 
   lifecycle {
@@ -31,7 +31,7 @@ resource "aws_lb_target_group" "extra" {
   target_type = "ip"
 
   tags = merge(local.default_tags, {
-    "service.k8s.aws/resource" = format("%s:%s", var.application, each.value.port)
+    "${var.tag_prefix}/resource" = format("%s:%s", var.application, each.value.port)
   })
 
   health_check {
