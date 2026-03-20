@@ -14,7 +14,7 @@ resource "aws_lb" "nlb" {
   enable_deletion_protection       = var.enable_deletion_protection
 
   tags = merge(local.default_tags, {
-    "service.k8s.aws/resource" = "LoadBalancer"
+    "${var.tag_prefix}/resource" = "LoadBalancer"
   })
 
   security_groups = [aws_security_group.nlb.id]
@@ -47,7 +47,7 @@ resource "aws_lb_listener" "tls" {
   }
 
   tags = merge(local.default_tags, {
-    "service.k8s.aws/resource" = "443"
+    "${var.tag_prefix}/resource" = "443"
   })
 
   lifecycle {
@@ -108,7 +108,7 @@ resource "aws_lb_listener" "plain" {
   }
 
   tags = merge(local.default_tags, {
-    "service.k8s.aws/resource" = "80"
+    "${var.tag_prefix}/resource" = "80"
   })
 
   lifecycle {
@@ -131,7 +131,7 @@ resource "aws_lb_target_group" "tls" {
   target_type = "ip"
 
   tags = merge(local.default_tags, {
-    "service.k8s.aws/resource" = "${var.application}:443"
+    "${var.tag_prefix}/resource" = "${var.application}:443"
   })
 
   health_check {
@@ -169,7 +169,7 @@ resource "aws_lb_target_group" "plain" {
   target_type = "ip"
 
   tags = merge(local.default_tags, {
-    "service.k8s.aws/resource" = "${var.application}:80"
+    "${var.tag_prefix}/resource" = "${var.application}:80"
   })
 
   health_check {
