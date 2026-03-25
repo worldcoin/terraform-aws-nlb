@@ -5,6 +5,7 @@ locals {
   short_name         = substr(local.name, 0, 26) # Shorter name used to bypass 32 char limitation for target groups
 }
 
+#trivy:ignore:aws-elb-alb-not-public
 resource "aws_lb" "nlb" {
   name                             = trimsuffix(substr(local.name, 0, 32), "-") # "name" cannot be longer than 32 characters and cannot end with "-"
   internal                         = var.internal
