@@ -74,7 +74,7 @@ resource "aws_security_group" "nlb" {
     }
   }
 
-  #tfsec:ignore:aws-vpc-no-public-egress-sgr
+  #trivy:ignore:aws-vpc-no-public-egress-sgr
   egress {
     description = "Allow all for egress"
     from_port   = 0
