@@ -27,10 +27,11 @@ variable "application" {
 }
 
 variable "acm_arn" {
-  description = "ARN for ACM certificate used for TLS"
+  description = "ARN for ACM certificate used for TLS. Required when the default TLS listener is enabled."
   type        = string
+  default     = null
   validation {
-    condition     = can(regex("^arn:aws:acm:[a-z][a-z]-[a-z]+-[1-9]:\\d{12}:certificate/[A-Za-z0-9\\-]+$", var.acm_arn))
+    condition     = var.acm_arn == null || can(regex("^arn:aws:acm:[a-z][a-z]-[a-z]+-[1-9]:\\d{12}:certificate/[A-Za-z0-9\\-]+$", var.acm_arn))
     error_message = "Invalid ACM ARN"
   }
 }

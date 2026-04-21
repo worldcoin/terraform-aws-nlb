@@ -52,6 +52,10 @@ resource "aws_lb_listener" "tls" {
   })
 
   lifecycle {
+    precondition {
+      condition     = var.acm_arn != null
+      error_message = "acm_arn is required when the default TLS listener is enabled."
+    }
     ignore_changes = [tags_all]
   }
 }
@@ -86,7 +90,7 @@ resource "aws_security_group" "nlb" {
 }
 
 resource "aws_lb_listener_certificate" "extra" {
-  count           = var.create_default_listeners ? length(var.acm_extra_arns) : 0
+  count           = var.create_default_listeners && var.create_default_tls_listener ? length(var.acm_extra_arns) : 0
   listener_arn    = aws_lb_listener.tls[0].arn
   certificate_arn = element(var.acm_extra_arns, count.index)
 }
