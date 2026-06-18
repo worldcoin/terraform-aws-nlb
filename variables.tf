@@ -202,6 +202,12 @@ variable "enable_deletion_protection" {
   default     = true
 }
 
+variable "enable_cross_zone_load_balancing" {
+  description = "If true, cross-zone load balancing is enabled (NLB routes to targets in any AZ regardless of which AZ the LB node received the traffic on). Disabling stops cross-AZ data-transfer charges, but the NLB node in a given AZ will drop traffic when no healthy targets exist in that AZ. Default true preserves prior behavior."
+  type        = bool
+  default     = true
+}
+
 variable "tag_prefix" {
   description = "Tag key prefix for LBC resource/stack tags (e.g. service.k8s.aws for Service LB, gateway.k8s.aws.nlb for Gateway API)"
   type        = string
