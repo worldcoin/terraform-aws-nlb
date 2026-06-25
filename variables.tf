@@ -203,7 +203,7 @@ variable "enable_deletion_protection" {
 }
 
 variable "enable_cross_zone_load_balancing" {
-  description = "If true, cross-zone load balancing is enabled (NLB routes to targets in any AZ regardless of which AZ the LB node received the traffic on). Disabling stops cross-AZ data-transfer charges, but the NLB node in a given AZ will drop traffic when no healthy targets exist in that AZ. Default true preserves prior behavior."
+  description = "If true, cross-zone load balancing is enabled (NLB routes to targets in any AZ regardless of which AZ the LB node received the traffic on). Disabling can reduce cross-AZ data-transfer charges, but the NLB node in a given AZ will drop traffic when no healthy targets exist in that AZ. Defaults to true to preserve prior behavior."
   type        = bool
   default     = true
 }
