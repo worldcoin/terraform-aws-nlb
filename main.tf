@@ -12,6 +12,7 @@ resource "aws_lb" "nlb" {
   load_balancer_type               = "network"
   subnets                          = length(var.private_subnets) > 0 ? var.private_subnets : var.public_subnets
   enable_cross_zone_load_balancing = var.enable_cross_zone_load_balancing
+  client_routing_policy            = var.client_routing_policy
   enable_deletion_protection       = var.enable_deletion_protection
 
   tags = merge(local.default_tags, {

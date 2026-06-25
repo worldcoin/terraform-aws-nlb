@@ -208,6 +208,16 @@ variable "enable_cross_zone_load_balancing" {
   default     = true
 }
 
+variable "client_routing_policy" {
+  description = "DNS client routing policy controlling which AZ's NLB node IP Route 53 returns when a client resolves the NLB hostname. `any_availability_zone` (default) returns IPs from any AZ. `partial_availability_zone_affinity` returns the local-AZ IP for ~85% of clients. `availability_zone_affinity` returns the local-AZ IP for 100% of clients. Combine with `enable_cross_zone_load_balancing = false` for end-to-end AZ affinity (client → NLB node → target all in same AZ), eliminating cross-AZ data-transfer cost. Caller must ensure each AZ has ≥1 healthy target; otherwise local-AZ clients will see failures rather than fail over."
+  type        = string
+  default     = "any_availability_zone"
+  validation {
+    condition     = contains(["any_availability_zone", "partial_availability_zone_affinity", "availability_zone_affinity"], var.client_routing_policy)
+    error_message = "client_routing_policy must be one of: any_availability_zone, partial_availability_zone_affinity, availability_zone_affinity"
+  }
+}
+
 variable "tag_prefix" {
   description = "Tag key prefix for LBC resource/stack tags (e.g. service.k8s.aws for Service LB, gateway.k8s.aws.nlb for Gateway API)"
   type        = string
