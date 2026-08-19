@@ -15,7 +15,9 @@ resource "aws_lb" "nlb" {
   dns_record_client_routing_policy = var.dns_record_client_routing_policy
   enable_deletion_protection       = var.enable_deletion_protection
 
-  tags = merge(local.default_tags, {
+  # var.tags fully replaces (not merges with) local.default_tags, so a non-cluster
+  # NLB can drop elbv2.k8s.aws/cluster entirely instead of just blanking it.
+  tags = length(var.tags) > 0 ? var.tags : merge(local.default_tags, {
     "${var.tag_prefix}/resource" = "LoadBalancer"
   })
 
@@ -48,7 +50,8 @@ resource "aws_lb_listener" "tls" {
     target_group_arn = aws_lb_target_group.tls[0].arn
   }
 
-  tags = merge(local.default_tags, {
+  # Same full-replace semantics as aws_lb.nlb.tags above.
+  tags = length(var.tags) > 0 ? var.tags : merge(local.default_tags, {
     "${var.tag_prefix}/resource" = "443"
   })
 
@@ -113,7 +116,8 @@ resource "aws_lb_listener" "plain" {
     target_group_arn = aws_lb_target_group.plain[0].arn
   }
 
-  tags = merge(local.default_tags, {
+  # Same full-replace semantics as aws_lb.nlb.tags above.
+  tags = length(var.tags) > 0 ? var.tags : merge(local.default_tags, {
     "${var.tag_prefix}/resource" = "80"
   })
 
@@ -136,7 +140,8 @@ resource "aws_lb_target_group" "tls" {
 
   target_type = "ip"
 
-  tags = merge(local.default_tags, {
+  # Same full-replace semantics as aws_lb.nlb.tags above.
+  tags = length(var.tags) > 0 ? var.tags : merge(local.default_tags, {
     "${var.tag_prefix}/resource" = "${var.application}:443"
   })
 
@@ -174,7 +179,8 @@ resource "aws_lb_target_group" "plain" {
 
   target_type = "ip"
 
-  tags = merge(local.default_tags, {
+  # Same full-replace semantics as aws_lb.nlb.tags above.
+  tags = length(var.tags) > 0 ? var.tags : merge(local.default_tags, {
     "${var.tag_prefix}/resource" = "${var.application}:80"
   })
 

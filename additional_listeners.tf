@@ -10,7 +10,8 @@ resource "aws_lb_listener" "extra" {
     target_group_arn = aws_lb_target_group.extra[each.value.name].arn
   }
 
-  tags = merge(local.default_tags, {
+  # Same full-replace semantics as aws_lb.nlb.tags in main.tf.
+  tags = length(var.tags) > 0 ? var.tags : merge(local.default_tags, {
     "${var.tag_prefix}/resource" = each.value.port
   })
 
@@ -30,7 +31,8 @@ resource "aws_lb_target_group" "extra" {
 
   target_type = "ip"
 
-  tags = merge(local.default_tags, {
+  # Same full-replace semantics as aws_lb.nlb.tags in main.tf.
+  tags = length(var.tags) > 0 ? var.tags : merge(local.default_tags, {
     "${var.tag_prefix}/resource" = format("%s:%s", var.application, each.value.port)
   })
 
