@@ -39,7 +39,7 @@ module "nlb" {
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.2 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.14.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.22.0 |
 
 ## Providers
 
@@ -78,6 +78,8 @@ No modules.
 | <a name="input_create_default_listeners"></a> [create\_default\_listeners](#input\_create\_default\_listeners) | If true, default listeners will be created | `bool` | `true` | no |
 | <a name="input_create_default_plain_listener"></a> [create\_default\_plain\_listener](#input\_create\_default\_plain\_listener) | If true, default listener (80) will be created (ANDed with create\_default\_listeners) | `bool` | `true` | no |
 | <a name="input_create_default_tls_listener"></a> [create\_default\_tls\_listener](#input\_create\_default\_tls\_listener) | If true, tls listener (443) will be created (ANDed with create\_default\_listeners) | `bool` | `true` | no |
+| <a name="input_dns_record_client_routing_policy"></a> [dns\_record\_client\_routing\_policy](#input\_dns\_record\_client\_routing\_policy) | DNS client routing policy controlling which AZ's NLB node IP Route 53 returns when a client resolves the NLB hostname. `any_availability_zone` (default) returns IPs from any AZ. `partial_availability_zone_affinity` returns the local-AZ IP for ~85% of clients. `availability_zone_affinity` returns the local-AZ IP for 100% of clients. Combine with `enable_cross_zone_load_balancing = false` for end-to-end AZ affinity (client → NLB node → target all in same AZ), eliminating cross-AZ data-transfer cost. Caller must ensure each AZ has ≥1 healthy target; otherwise local-AZ clients will see failures rather than fail over. | `string` | `"any_availability_zone"` | no |
+| <a name="input_enable_cross_zone_load_balancing"></a> [enable\_cross\_zone\_load\_balancing](#input\_enable\_cross\_zone\_load\_balancing) | If true, cross-zone load balancing is enabled (NLB routes to targets in any AZ regardless of which AZ the LB node received the traffic on). Disabling can reduce cross-AZ data-transfer charges, but the NLB node in a given AZ will drop traffic when no healthy targets exist in that AZ. Defaults to true to preserve prior behavior. | `bool` | `true` | no |
 | <a name="input_enable_deletion_protection"></a> [enable\_deletion\_protection](#input\_enable\_deletion\_protection) | If true, deletion of the load balancer will be disabled via the AWS API | `bool` | `true` | no |
 | <a name="input_extra_listeners"></a> [extra\_listeners](#input\_extra\_listeners) | List with configuration for additional listeners | <pre>list(object({<br/>    name              = string<br/>    port              = string<br/>    protocol          = optional(string, "TCP")<br/>    target_group_port = number<br/>  }))</pre> | `[]` | no |
 | <a name="input_health_check_port"></a> [health\_check\_port](#input\_health\_check\_port) | Port used for health check for listener | `number` | `-1` | no |
@@ -89,6 +91,7 @@ No modules.
 | <a name="input_public_subnets"></a> [public\_subnets](#input\_public\_subnets) | List of public subnets to use | `list(string)` | `[]` | no |
 | <a name="input_tag_prefix"></a> [tag\_prefix](#input\_tag\_prefix) | Tag key prefix for LBC resource/stack tags (e.g. service.k8s.aws for Service LB, gateway.k8s.aws.nlb for Gateway API) | `string` | `"service.k8s.aws"` | no |
 | <a name="input_tag_stack"></a> [tag\_stack](#input\_tag\_stack) | Override the computed stack tag value (default: var.application) | `string` | `""` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | Tags for the NLB and its listeners/target groups (default, extra, and Gateway API). If non-empty, these fully replace the module's default tags (`elbv2.k8s.aws/cluster`, `<tag_prefix>/resource`, `<tag_prefix>/stack`) instead of merging with them - use this for an NLB that must not be tracked/managed by an EKS AWS Load Balancer Controller. | `map(string)` | `{}` | no |
 | <a name="input_tls_listener_version"></a> [tls\_listener\_version](#input\_tls\_listener\_version) | Minimum TLS version served by TLS listener | `string` | `"1.3"` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | VPC ID where the NLB will be deployed | `string` | n/a | yes |
 

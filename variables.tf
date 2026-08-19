@@ -218,6 +218,13 @@ variable "dns_record_client_routing_policy" {
   }
 }
 
+variable "tags" {
+  description = "Tags for the NLB and its listeners/target groups (default, extra, and Gateway API). If non-empty, these fully replace the module's default tags (`elbv2.k8s.aws/cluster`, `<tag_prefix>/resource`, `<tag_prefix>/stack`) instead of merging with them - use this for an NLB that must not be tracked/managed by an EKS AWS Load Balancer Controller."
+  type        = map(string)
+  default     = {}
+  nullable    = false
+}
+
 variable "tag_prefix" {
   description = "Tag key prefix for LBC resource/stack tags (e.g. service.k8s.aws for Service LB, gateway.k8s.aws.nlb for Gateway API)"
   type        = string
