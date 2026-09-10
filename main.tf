@@ -7,19 +7,18 @@ locals {
 
 #trivy:ignore:aws-elb-alb-not-public
 resource "aws_lb" "nlb" {
-  name                             = trimsuffix(substr(local.name, 0, 32), "-") # "name" cannot be longer than 32 characters and cannot end with "-"
-  internal                         = var.internal
-  load_balancer_type               = "network"
-  subnets                          = length(var.private_subnets) > 0 ? var.private_subnets : var.public_subnets
-  enable_cross_zone_load_balancing = var.enable_cross_zone_load_balancing
-  dns_record_client_routing_policy = var.dns_record_client_routing_policy
-  enable_deletion_protection       = var.enable_deletion_protection
+  name                                                         = trimsuffix(substr(local.name, 0, 32), "-") # "name" cannot be longer than 32 characters and cannot end with "-"
+  internal                                                     = var.internal
+  load_balancer_type                                           = "network"
+  subnets                                                      = length(var.private_subnets) > 0 ? var.private_subnets : var.public_subnets
+  enable_cross_zone_load_balancing                             = var.enable_cross_zone_load_balancing
+  dns_record_client_routing_policy                             = var.dns_record_client_routing_policy
+  enable_deletion_protection                                   = var.enable_deletion_protection
+  enforce_security_group_inbound_rules_on_private_link_traffic = var.enforce_security_group_inbound_rules_on_private_link_traffic
 
   # var.tags fully replaces (not merges with) local.default_tags, so a non-cluster
   # NLB can drop elbv2.k8s.aws/cluster entirely instead of just blanking it.
-  tags = length(var.tags) > 0 ? var.tags : merge(local.default_tags, {
-    "${var.tag_prefix}/resource" = "LoadBalancer"
-  })
+  tags = local.load_balancer_tags
 
   security_groups = [aws_security_group.nlb.id]
 
@@ -83,13 +82,19 @@ resource "aws_security_group" "nlb" {
     }
   }
 
-  #trivy:ignore:aws-vpc-no-public-egress-sgr
-  egress {
-    description = "Allow all for egress"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+  #trivy:ignore:aws-vpc-no-public-egress-sgr -- Default preserves the legacy module contract; private workloads should set egress_sg_rules explicitly.
+  dynamic "egress" {
+    for_each = var.egress_sg_rules
+
+    content {
+      description      = egress.value.description
+      from_port        = egress.value.from_port
+      to_port          = egress.value.to_port
+      protocol         = egress.value.protocol
+      security_groups  = egress.value.security_groups
+      cidr_blocks      = egress.value.cidr_blocks
+      ipv6_cidr_blocks = egress.value.ipv6_cidr_blocks
+    }
   }
 }
 

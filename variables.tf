@@ -208,6 +208,128 @@ variable "enable_cross_zone_load_balancing" {
   default     = true
 }
 
+variable "enforce_security_group_inbound_rules_on_private_link_traffic" {
+  description = "Whether the NLB security group evaluates inbound traffic received over PrivateLink. Set to `off` only when the PrivateLink integration cannot present source addresses allowed by ingress_sg_rules."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.enforce_security_group_inbound_rules_on_private_link_traffic == null || contains(["on", "off"], var.enforce_security_group_inbound_rules_on_private_link_traffic)
+    error_message = "enforce_security_group_inbound_rules_on_private_link_traffic must be `on`, `off`, or null."
+  }
+}
+
+variable "egress_sg_rules" {
+  description = "NLB security group egress rules. Defaults to the legacy allow-all rule; provide explicit rules for private workloads."
+  type = set(object({
+    description      = optional(string, "")
+    protocol         = optional(string, "tcp")
+    from_port        = optional(number, 0)
+    to_port          = optional(number, 65535)
+    security_groups  = optional(list(string))
+    cidr_blocks      = optional(list(string))
+    ipv6_cidr_blocks = optional(list(string))
+  }))
+  default = [{
+    description = "Allow all for egress"
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
+  }]
+
+  validation {
+    condition = alltrue([
+      for rule in var.egress_sg_rules : (
+        rule.description != null ? can(regex("^.{0,255}$", rule.description)) : true &&
+        rule.protocol != null ? contains(["-1", "tcp", "udp", "icmp", "icmpv6"], rule.protocol) : true &&
+        rule.from_port != null && rule.to_port != null ? (rule.from_port >= 0 && rule.to_port >= rule.from_port && rule.to_port <= 65535) : true &&
+        rule.security_groups != null ? alltrue([for sg in rule.security_groups : can(regex("^sg-[a-z0-9]+$", sg))]) : true &&
+        rule.cidr_blocks != null ? alltrue([for cidr in rule.cidr_blocks : can(cidrnetmask(cidr))]) : true &&
+        rule.ipv6_cidr_blocks != null ? alltrue([for cidr in rule.ipv6_cidr_blocks : can(cidrnetmask(cidr))]) : true
+      )
+    ])
+    error_message = "Invalid NLB security group egress rule."
+  }
+}
+
+variable "load_balancer_tags" {
+  description = "Additional tags applied only to the NLB, merged after tags or the legacy controller tags."
+  type        = map(string)
+  default     = {}
+  nullable    = false
+}
+
+variable "target_groups" {
+  description = "Additional named target groups for non-controller integrations such as ECS. Keys are stable Terraform identities."
+  type = map(object({
+    port                 = number
+    protocol             = optional(string, "TCP")
+    target_type          = optional(string, "ip")
+    deregistration_delay = optional(number, 300)
+    health_check = optional(object({
+      enabled             = optional(bool, true)
+      healthy_threshold   = optional(number, 3)
+      interval            = optional(number, 30)
+      matcher             = optional(string)
+      path                = optional(string)
+      port                = optional(string, "traffic-port")
+      protocol            = optional(string, "TCP")
+      timeout             = optional(number)
+      unhealthy_threshold = optional(number, 3)
+    }), {})
+    tags = optional(map(string), {})
+  }))
+  default  = {}
+  nullable = false
+
+  validation {
+    condition = alltrue([
+      for name, target_group in var.target_groups : (
+        can(regex("^[a-z0-9-]+$", name)) &&
+        target_group.port >= 1 && target_group.port <= 65535 &&
+        contains(["TCP", "TLS", "UDP", "TCP_UDP"], target_group.protocol) &&
+        contains(["instance", "ip", "alb"], target_group.target_type) &&
+        target_group.deregistration_delay >= 0 && target_group.deregistration_delay <= 3600 &&
+        contains(["TCP", "HTTP", "HTTPS"], target_group.health_check.protocol) &&
+        target_group.health_check.interval >= 5 && target_group.health_check.interval <= 300 &&
+        target_group.health_check.healthy_threshold >= 2 && target_group.health_check.healthy_threshold <= 10 &&
+        target_group.health_check.unhealthy_threshold >= 2 && target_group.health_check.unhealthy_threshold <= 10 &&
+        (target_group.health_check.timeout == null || (target_group.health_check.timeout >= 2 && target_group.health_check.timeout <= 120)) &&
+        (target_group.health_check.protocol == "TCP" || target_group.health_check.path != null)
+      )
+    ])
+    error_message = "Target group names, ports, protocols, health checks, or deregistration delays are invalid. HTTP(S) health checks require a path."
+  }
+}
+
+variable "listeners" {
+  description = "Additional named listeners. Each listener forwards to a target_groups key; keys are stable Terraform identities."
+  type = map(object({
+    port             = number
+    protocol         = optional(string, "TCP")
+    target_group_key = string
+    certificate_arn  = optional(string)
+    ssl_policy       = optional(string)
+    tags             = optional(map(string), {})
+  }))
+  default  = {}
+  nullable = false
+
+  validation {
+    condition = alltrue([
+      for name, listener in var.listeners : (
+        can(regex("^[a-z0-9-]+$", name)) &&
+        listener.port >= 1 && listener.port <= 65535 &&
+        contains(["TCP", "TLS", "UDP", "TCP_UDP"], listener.protocol) &&
+        can(regex("^[a-z0-9-]+$", listener.target_group_key)) &&
+        (listener.protocol == "TLS" ? listener.certificate_arn != null : listener.certificate_arn == null)
+      )
+    ])
+    error_message = "Listener names, ports, protocols, target group keys, or TLS certificates are invalid. TLS listeners require certificate_arn; other protocols must not set it."
+  }
+}
+
 variable "dns_record_client_routing_policy" {
   description = "DNS client routing policy controlling which AZ's NLB node IP Route 53 returns when a client resolves the NLB hostname. `any_availability_zone` (default) returns IPs from any AZ. `partial_availability_zone_affinity` returns the local-AZ IP for ~85% of clients. `availability_zone_affinity` returns the local-AZ IP for 100% of clients. Combine with `enable_cross_zone_load_balancing = false` for end-to-end AZ affinity (client → NLB node → target all in same AZ), eliminating cross-AZ data-transfer cost. Caller must ensure each AZ has ≥1 healthy target; otherwise local-AZ clients will see failures rather than fail over."
   type        = string
