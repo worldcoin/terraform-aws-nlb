@@ -6,14 +6,6 @@ variables {
   internal                 = true
   create_default_listeners = false
   tags                     = { owner = "ecs" }
-  egress_sg_rules = [{
-    description     = "Allow ECS task traffic"
-    protocol        = "tcp"
-    from_port       = 8080
-    to_port         = 8080
-    security_groups = ["sg-0a0a0a0a0a0a0a0a0"]
-  }]
-  enforce_security_group_inbound_rules_on_private_link_traffic = "off"
   target_groups = {
     ep-api = {
       port                 = 8080
@@ -38,11 +30,6 @@ variables {
 
 run "dynamic_ecs_listener_and_target_group" {
   command = plan
-
-  assert {
-    condition     = aws_lb.nlb.enforce_security_group_inbound_rules_on_private_link_traffic == "off"
-    error_message = "PrivateLink security group setting was not propagated to the NLB."
-  }
 
   assert {
     condition     = aws_lb_target_group.dynamic["ep-api"].deregistration_delay == "60" && aws_lb_target_group.dynamic["ep-api"].health_check[0].protocol == "HTTP" && aws_lb_target_group.dynamic["ep-api"].health_check[0].path == "/health"

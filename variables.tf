@@ -208,58 +208,6 @@ variable "enable_cross_zone_load_balancing" {
   default     = true
 }
 
-variable "enforce_security_group_inbound_rules_on_private_link_traffic" {
-  description = "Whether the NLB security group evaluates inbound traffic received over PrivateLink. Set to `off` only when the PrivateLink integration cannot present source addresses allowed by ingress_sg_rules."
-  type        = string
-  default     = null
-
-  validation {
-    condition     = var.enforce_security_group_inbound_rules_on_private_link_traffic == null || contains(["on", "off"], var.enforce_security_group_inbound_rules_on_private_link_traffic)
-    error_message = "enforce_security_group_inbound_rules_on_private_link_traffic must be `on`, `off`, or null."
-  }
-}
-
-variable "egress_sg_rules" {
-  description = "NLB security group egress rules. Defaults to the legacy allow-all rule; provide explicit rules for private workloads."
-  type = set(object({
-    description      = optional(string, "")
-    protocol         = optional(string, "tcp")
-    from_port        = optional(number, 0)
-    to_port          = optional(number, 65535)
-    security_groups  = optional(list(string))
-    cidr_blocks      = optional(list(string))
-    ipv6_cidr_blocks = optional(list(string))
-  }))
-  default = [{
-    description = "Allow all for egress"
-    protocol    = "-1"
-    from_port   = 0
-    to_port     = 0
-    cidr_blocks = ["0.0.0.0/0"]
-  }]
-
-  validation {
-    condition = alltrue([
-      for rule in var.egress_sg_rules : (
-        rule.description != null ? can(regex("^.{0,255}$", rule.description)) : true &&
-        rule.protocol != null ? contains(["-1", "tcp", "udp", "icmp", "icmpv6"], rule.protocol) : true &&
-        rule.from_port != null && rule.to_port != null ? (rule.from_port >= 0 && rule.to_port >= rule.from_port && rule.to_port <= 65535) : true &&
-        rule.security_groups != null ? alltrue([for sg in rule.security_groups : can(regex("^sg-[a-z0-9]+$", sg))]) : true &&
-        rule.cidr_blocks != null ? alltrue([for cidr in rule.cidr_blocks : can(cidrnetmask(cidr))]) : true &&
-        rule.ipv6_cidr_blocks != null ? alltrue([for cidr in rule.ipv6_cidr_blocks : can(cidrnetmask(cidr))]) : true
-      )
-    ])
-    error_message = "Invalid NLB security group egress rule."
-  }
-}
-
-variable "load_balancer_tags" {
-  description = "Additional tags applied only to the NLB, merged after tags or the legacy controller tags."
-  type        = map(string)
-  default     = {}
-  nullable    = false
-}
-
 variable "target_groups" {
   description = "Additional named target groups for non-controller integrations such as ECS. Keys are stable Terraform identities."
   type = map(object({

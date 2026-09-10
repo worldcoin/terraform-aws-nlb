@@ -52,14 +52,6 @@ module "ecs_nlb" {
   create_default_listeners = false
   tags                     = { service = "example" }
 
-  egress_sg_rules = [{
-    description     = "Allow ECS task traffic"
-    protocol        = "tcp"
-    from_port       = 8080
-    to_port         = 8080
-    security_groups = [aws_security_group.task.id]
-  }]
-
   target_groups = {
     api = {
       port                 = 8080
@@ -86,7 +78,7 @@ module "ecs_nlb" {
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.2 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.14.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.22.0 |
 
 ## Providers
 
@@ -128,16 +120,13 @@ No modules.
 | <a name="input_create_default_plain_listener"></a> [create\_default\_plain\_listener](#input\_create\_default\_plain\_listener) | If true, default listener (80) will be created (ANDed with create\_default\_listeners) | `bool` | `true` | no |
 | <a name="input_create_default_tls_listener"></a> [create\_default\_tls\_listener](#input\_create\_default\_tls\_listener) | If true, tls listener (443) will be created (ANDed with create\_default\_listeners) | `bool` | `true` | no |
 | <a name="input_dns_record_client_routing_policy"></a> [dns\_record\_client\_routing\_policy](#input\_dns\_record\_client\_routing\_policy) | DNS client routing policy controlling which AZ's NLB node IP Route 53 returns when a client resolves the NLB hostname. `any_availability_zone` (default) returns IPs from any AZ. `partial_availability_zone_affinity` returns the local-AZ IP for ~85% of clients. `availability_zone_affinity` returns the local-AZ IP for 100% of clients. Combine with `enable_cross_zone_load_balancing = false` for end-to-end AZ affinity (client → NLB node → target all in same AZ), eliminating cross-AZ data-transfer cost. Caller must ensure each AZ has ≥1 healthy target; otherwise local-AZ clients will see failures rather than fail over. | `string` | `"any_availability_zone"` | no |
-| <a name="input_egress_sg_rules"></a> [egress\_sg\_rules](#input\_egress\_sg\_rules) | NLB security group egress rules. Defaults to the legacy allow-all rule; provide explicit rules for private workloads. | <pre>set(object({<br/>    description      = optional(string, "")<br/>    protocol         = optional(string, "tcp")<br/>    from_port        = optional(number, 0)<br/>    to_port          = optional(number, 65535)<br/>    security_groups  = optional(list(string))<br/>    cidr_blocks      = optional(list(string))<br/>    ipv6_cidr_blocks = optional(list(string))<br/>  }))</pre> | <pre>[<br/>  {<br/>    "cidr_blocks": [<br/>      "0.0.0.0/0"<br/>    ],<br/>    "description": "Allow all for egress",<br/>    "from_port": 0,<br/>    "protocol": "-1",<br/>    "to_port": 0<br/>  }<br/>]</pre> | no |
 | <a name="input_enable_cross_zone_load_balancing"></a> [enable\_cross\_zone\_load\_balancing](#input\_enable\_cross\_zone\_load\_balancing) | If true, cross-zone load balancing is enabled (NLB routes to targets in any AZ regardless of which AZ the LB node received the traffic on). Disabling can reduce cross-AZ data-transfer charges, but the NLB node in a given AZ will drop traffic when no healthy targets exist in that AZ. Defaults to true to preserve prior behavior. | `bool` | `true` | no |
 | <a name="input_enable_deletion_protection"></a> [enable\_deletion\_protection](#input\_enable\_deletion\_protection) | If true, deletion of the load balancer will be disabled via the AWS API | `bool` | `true` | no |
-| <a name="input_enforce_security_group_inbound_rules_on_private_link_traffic"></a> [enforce\_security\_group\_inbound\_rules\_on\_private\_link\_traffic](#input\_enforce\_security\_group\_inbound\_rules\_on\_private\_link\_traffic) | Whether the NLB security group evaluates inbound traffic received over PrivateLink. Set to `off` only when the PrivateLink integration cannot present source addresses allowed by ingress\_sg\_rules. | `string` | `null` | no |
 | <a name="input_extra_listeners"></a> [extra\_listeners](#input\_extra\_listeners) | List with configuration for additional listeners | <pre>list(object({<br/>    name              = string<br/>    port              = string<br/>    protocol          = optional(string, "TCP")<br/>    target_group_port = number<br/>  }))</pre> | `[]` | no |
 | <a name="input_health_check_port"></a> [health\_check\_port](#input\_health\_check\_port) | Port used for health check for listener | `number` | `-1` | no |
 | <a name="input_ingress_sg_rules"></a> [ingress\_sg\_rules](#input\_ingress\_sg\_rules) | The security group rules to allow ingress from. | <pre>set(object({<br/>    description      = optional(string, "")<br/>    protocol         = optional(string, "tcp")<br/>    port             = optional(number, 443)<br/>    security_groups  = optional(list(string))<br/>    cidr_blocks      = optional(list(string))<br/>    ipv6_cidr_blocks = optional(list(string))<br/>  }))</pre> | <pre>[<br/>  {<br/>    "cidr_blocks": [<br/>      "0.0.0.0/0"<br/>    ],<br/>    "description": "allow http from anywhere",<br/>    "port": 80<br/>  },<br/>  {<br/>    "description": "allow http from anywhere",<br/>    "ipv6_cidr_blocks": [<br/>      "::/0"<br/>    ],<br/>    "port": 80<br/>  },<br/>  {<br/>    "cidr_blocks": [<br/>      "0.0.0.0/0"<br/>    ],<br/>    "description": "allow https from anywhere",<br/>    "port": 443<br/>  },<br/>  {<br/>    "description": "allow https from anywhere",<br/>    "ipv6_cidr_blocks": [<br/>      "::/0"<br/>    ],<br/>    "port": 443<br/>  }<br/>]</pre> | no |
 | <a name="input_internal"></a> [internal](#input\_internal) | Set NLB to be internal (available only within VPC) | `bool` | n/a | yes |
 | <a name="input_listeners"></a> [listeners](#input\_listeners) | Additional named listeners. Each listener forwards to a target\_groups key; keys are stable Terraform identities. | <pre>map(object({<br/>    port             = number<br/>    protocol         = optional(string, "TCP")<br/>    target_group_key = string<br/>    certificate_arn  = optional(string)<br/>    ssl_policy       = optional(string)<br/>    tags             = optional(map(string), {})<br/>  }))</pre> | `{}` | no |
-| <a name="input_load_balancer_tags"></a> [load\_balancer\_tags](#input\_load\_balancer\_tags) | Additional tags applied only to the NLB, merged after tags or the legacy controller tags. | `map(string)` | `{}` | no |
 | <a name="input_name"></a> [name](#input\_name) | Name of the NLB, overrides default naming | `string` | `""` | no |
 | <a name="input_name_suffix"></a> [name\_suffix](#input\_name\_suffix) | Part of the name used to differentiate NLBs for multiple traefik instances | `string` | `""` | no |
 | <a name="input_private_subnets"></a> [private\_subnets](#input\_private\_subnets) | List of private subnets to use | `list(string)` | `[]` | no |
