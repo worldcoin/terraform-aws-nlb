@@ -1,8 +1,9 @@
 # terraform-aws-nlb
 
-The module code moved from https://github.com/worldcoin/infrastructure/tree/main/modules/clusters/orb/nlb
+The module code moved from <https://github.com/worldcoin/infrastructure/tree/main/modules/clusters/orb/nlb>
 
 ## Example
+
 ```terraform
 module "nlb" {
   source = "github.com/worldcoin/terraform-aws-nlb?ref=v0.1.0"
@@ -33,6 +34,45 @@ module "nlb" {
   public_subnets = var.vpc_config.public_subnets
 }
 ```
+
+## Dynamic listeners and target groups
+
+Use `target_groups` and `listeners` for workloads managed outside the AWS Load Balancer Controller, such as ECS. Their map keys are stable Terraform identities. Disable the legacy listeners, set `tags` to avoid controller tags, and scope NLB egress to the task security group.
+
+```terraform
+module "ecs_nlb" {
+  source = "git@github.com:worldcoin/terraform-aws-nlb.git?ref=vX.Y.Z"
+
+  name            = "example-ecs"
+  cluster_name    = "unused-for-ecs"
+  application     = "example/ecs"
+  internal        = true
+  vpc_id          = module.vpc.vpc_id
+  private_subnets = module.vpc.private_subnets
+
+  create_default_listeners = false
+  tags                     = { service = "example" }
+
+  target_groups = {
+    api = {
+      port                 = 8080
+      deregistration_delay = 60
+      health_check = {
+        protocol = "HTTP"
+        path     = "/health"
+        matcher  = "200"
+      }
+    }
+  }
+
+  listeners = {
+    http = {
+      port             = 80
+      target_group_key = "api"
+    }
+  }
+}
+```
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -45,7 +85,7 @@ module "nlb" {
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.14.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.52.0 |
 
 ## Modules
 
@@ -56,10 +96,12 @@ No modules.
 | Name | Type |
 | ---- | ---- |
 | [aws_lb.nlb](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb) | resource |
+| [aws_lb_listener.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener) | resource |
 | [aws_lb_listener.extra](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener) | resource |
 | [aws_lb_listener.plain](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener) | resource |
 | [aws_lb_listener.tls](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener) | resource |
 | [aws_lb_listener_certificate.extra](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener_certificate) | resource |
+| [aws_lb_target_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group) | resource |
 | [aws_lb_target_group.extra](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group) | resource |
 | [aws_lb_target_group.plain](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group) | resource |
 | [aws_lb_target_group.tls](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group) | resource |
@@ -85,6 +127,7 @@ No modules.
 | <a name="input_health_check_port"></a> [health\_check\_port](#input\_health\_check\_port) | Port used for health check for listener | `number` | `-1` | no |
 | <a name="input_ingress_sg_rules"></a> [ingress\_sg\_rules](#input\_ingress\_sg\_rules) | The security group rules to allow ingress from. | <pre>set(object({<br/>    description      = optional(string, "")<br/>    protocol         = optional(string, "tcp")<br/>    port             = optional(number, 443)<br/>    security_groups  = optional(list(string))<br/>    cidr_blocks      = optional(list(string))<br/>    ipv6_cidr_blocks = optional(list(string))<br/>  }))</pre> | <pre>[<br/>  {<br/>    "cidr_blocks": [<br/>      "0.0.0.0/0"<br/>    ],<br/>    "description": "allow http from anywhere",<br/>    "port": 80<br/>  },<br/>  {<br/>    "description": "allow http from anywhere",<br/>    "ipv6_cidr_blocks": [<br/>      "::/0"<br/>    ],<br/>    "port": 80<br/>  },<br/>  {<br/>    "cidr_blocks": [<br/>      "0.0.0.0/0"<br/>    ],<br/>    "description": "allow https from anywhere",<br/>    "port": 443<br/>  },<br/>  {<br/>    "description": "allow https from anywhere",<br/>    "ipv6_cidr_blocks": [<br/>      "::/0"<br/>    ],<br/>    "port": 443<br/>  }<br/>]</pre> | no |
 | <a name="input_internal"></a> [internal](#input\_internal) | Set NLB to be internal (available only within VPC) | `bool` | n/a | yes |
+| <a name="input_listeners"></a> [listeners](#input\_listeners) | Additional named listeners. Each listener forwards to a target\_groups key; keys are stable Terraform identities. | <pre>map(object({<br/>    port             = number<br/>    protocol         = optional(string, "TCP")<br/>    target_group_key = string<br/>    certificate_arn  = optional(string)<br/>    ssl_policy       = optional(string)<br/>    tags             = optional(map(string), {})<br/>  }))</pre> | `{}` | no |
 | <a name="input_name"></a> [name](#input\_name) | Name of the NLB, overrides default naming | `string` | `""` | no |
 | <a name="input_name_suffix"></a> [name\_suffix](#input\_name\_suffix) | Part of the name used to differentiate NLBs for multiple traefik instances | `string` | `""` | no |
 | <a name="input_private_subnets"></a> [private\_subnets](#input\_private\_subnets) | List of private subnets to use | `list(string)` | `[]` | no |
@@ -92,6 +135,7 @@ No modules.
 | <a name="input_tag_prefix"></a> [tag\_prefix](#input\_tag\_prefix) | Tag key prefix for LBC resource/stack tags (e.g. service.k8s.aws for Service LB, gateway.k8s.aws.nlb for Gateway API) | `string` | `"service.k8s.aws"` | no |
 | <a name="input_tag_stack"></a> [tag\_stack](#input\_tag\_stack) | Override the computed stack tag value (default: var.application) | `string` | `""` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags for the NLB and its listeners/target groups (default, extra, and Gateway API). If non-empty, these fully replace the module's default tags (`elbv2.k8s.aws/cluster`, `<tag_prefix>/resource`, `<tag_prefix>/stack`) instead of merging with them - use this for an NLB that must not be tracked/managed by an EKS AWS Load Balancer Controller. | `map(string)` | `{}` | no |
+| <a name="input_target_groups"></a> [target\_groups](#input\_target\_groups) | Additional named target groups for non-controller integrations such as ECS. Keys are stable Terraform identities. | <pre>map(object({<br/>    port                 = number<br/>    protocol             = optional(string, "TCP")<br/>    target_type          = optional(string, "ip")<br/>    deregistration_delay = optional(number, 300)<br/>    health_check = optional(object({<br/>      enabled             = optional(bool, true)<br/>      healthy_threshold   = optional(number, 3)<br/>      interval            = optional(number, 30)<br/>      matcher             = optional(string)<br/>      path                = optional(string)<br/>      port                = optional(string, "traffic-port")<br/>      protocol            = optional(string, "TCP")<br/>      timeout             = optional(number)<br/>      unhealthy_threshold = optional(number, 3)<br/>    }), {})<br/>    tags = optional(map(string), {})<br/>  }))</pre> | `{}` | no |
 | <a name="input_tls_listener_version"></a> [tls\_listener\_version](#input\_tls\_listener\_version) | Minimum TLS version served by TLS listener | `string` | `"1.3"` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | VPC ID where the NLB will be deployed | `string` | n/a | yes |
 
@@ -101,8 +145,10 @@ No modules.
 | ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | The ARN of the NLB. |
 | <a name="output_dns_name"></a> [dns\_name](#output\_dns\_name) | The DNS name of the NLB. |
+| <a name="output_listener_arns"></a> [listener\_arns](#output\_listener\_arns) | ARNs of listeners created from listeners, keyed by listener name. |
 | <a name="output_ready"></a> [ready](#output\_ready) | Hack! Because modules with providers (cluster-apps) cannot use depends\_on output value needs to be used to make sure those are provisioned in correct order. |
 | <a name="output_sg_nlb_id"></a> [sg\_nlb\_id](#output\_sg\_nlb\_id) | The ID of the security group attached to NLB |
 | <a name="output_ssl_policy"></a> [ssl\_policy](#output\_ssl\_policy) | SSL Policy attached to loadbalancer |
+| <a name="output_target_group_arns"></a> [target\_group\_arns](#output\_target\_group\_arns) | ARNs of target groups created from target\_groups, keyed by target group name. |
 | <a name="output_zone_id"></a> [zone\_id](#output\_zone\_id) | The zone ID of the NLB. |
 <!-- END_TF_DOCS -->

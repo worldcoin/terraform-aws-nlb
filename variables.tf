@@ -208,6 +208,76 @@ variable "enable_cross_zone_load_balancing" {
   default     = true
 }
 
+variable "target_groups" {
+  description = "Additional named target groups for non-controller integrations such as ECS. Keys are stable Terraform identities."
+  type = map(object({
+    port                 = number
+    protocol             = optional(string, "TCP")
+    target_type          = optional(string, "ip")
+    deregistration_delay = optional(number, 300)
+    health_check = optional(object({
+      enabled             = optional(bool, true)
+      healthy_threshold   = optional(number, 3)
+      interval            = optional(number, 30)
+      matcher             = optional(string)
+      path                = optional(string)
+      port                = optional(string, "traffic-port")
+      protocol            = optional(string, "TCP")
+      timeout             = optional(number)
+      unhealthy_threshold = optional(number, 3)
+    }), {})
+    tags = optional(map(string), {})
+  }))
+  default  = {}
+  nullable = false
+
+  validation {
+    condition = alltrue([
+      for name, target_group in var.target_groups : (
+        can(regex("^[a-z0-9-]+$", name)) &&
+        target_group.port >= 1 && target_group.port <= 65535 &&
+        contains(["TCP", "TLS", "UDP", "TCP_UDP"], target_group.protocol) &&
+        contains(["instance", "ip", "alb"], target_group.target_type) &&
+        target_group.deregistration_delay >= 0 && target_group.deregistration_delay <= 3600 &&
+        contains(["TCP", "HTTP", "HTTPS"], target_group.health_check.protocol) &&
+        target_group.health_check.interval >= 5 && target_group.health_check.interval <= 300 &&
+        target_group.health_check.healthy_threshold >= 2 && target_group.health_check.healthy_threshold <= 10 &&
+        target_group.health_check.unhealthy_threshold >= 2 && target_group.health_check.unhealthy_threshold <= 10 &&
+        (target_group.health_check.timeout == null || (target_group.health_check.timeout >= 2 && target_group.health_check.timeout <= 120)) &&
+        (target_group.health_check.protocol == "TCP" || target_group.health_check.path != null)
+      )
+    ])
+    error_message = "Target group names, ports, protocols, health checks, or deregistration delays are invalid. HTTP(S) health checks require a path."
+  }
+}
+
+variable "listeners" {
+  description = "Additional named listeners. Each listener forwards to a target_groups key; keys are stable Terraform identities."
+  type = map(object({
+    port             = number
+    protocol         = optional(string, "TCP")
+    target_group_key = string
+    certificate_arn  = optional(string)
+    ssl_policy       = optional(string)
+    tags             = optional(map(string), {})
+  }))
+  default  = {}
+  nullable = false
+
+  validation {
+    condition = alltrue([
+      for name, listener in var.listeners : (
+        can(regex("^[a-z0-9-]+$", name)) &&
+        listener.port >= 1 && listener.port <= 65535 &&
+        contains(["TCP", "TLS", "UDP", "TCP_UDP"], listener.protocol) &&
+        can(regex("^[a-z0-9-]+$", listener.target_group_key)) &&
+        (listener.protocol == "TLS" ? listener.certificate_arn != null : listener.certificate_arn == null)
+      )
+    ])
+    error_message = "Listener names, ports, protocols, target group keys, or TLS certificates are invalid. TLS listeners require certificate_arn; other protocols must not set it."
+  }
+}
+
 variable "dns_record_client_routing_policy" {
   description = "DNS client routing policy controlling which AZ's NLB node IP Route 53 returns when a client resolves the NLB hostname. `any_availability_zone` (default) returns IPs from any AZ. `partial_availability_zone_affinity` returns the local-AZ IP for ~85% of clients. `availability_zone_affinity` returns the local-AZ IP for 100% of clients. Combine with `enable_cross_zone_load_balancing = false` for end-to-end AZ affinity (client → NLB node → target all in same AZ), eliminating cross-AZ data-transfer cost. Caller must ensure each AZ has ≥1 healthy target; otherwise local-AZ clients will see failures rather than fail over."
   type        = string

@@ -30,3 +30,13 @@ output "sg_nlb_id" {
   description = "The ID of the security group attached to NLB"
   value       = aws_security_group.nlb.id
 }
+
+output "target_group_arns" {
+  description = "ARNs of target groups created from target_groups, keyed by target group name."
+  value       = { for name, target_group in aws_lb_target_group.this : name => target_group.arn }
+}
+
+output "listener_arns" {
+  description = "ARNs of listeners created from listeners, keyed by listener name."
+  value       = { for name, listener in aws_lb_listener.this : name => listener.arn }
+}
