@@ -28,16 +28,16 @@ variables {
   }
 }
 
-run "dynamic_ecs_listener_and_target_group" {
+run "ecs_listener_and_target_group" {
   command = plan
 
   assert {
-    condition     = aws_lb_target_group.dynamic["ep-api"].deregistration_delay == "60" && aws_lb_target_group.dynamic["ep-api"].health_check[0].protocol == "HTTP" && aws_lb_target_group.dynamic["ep-api"].health_check[0].path == "/health"
-    error_message = "Dynamic target group must preserve ECS draining and HTTP health-check settings."
+    condition     = aws_lb_target_group.this["ep-api"].deregistration_delay == "60" && aws_lb_target_group.this["ep-api"].health_check[0].protocol == "HTTP" && aws_lb_target_group.this["ep-api"].health_check[0].path == "/health"
+    error_message = "Target group must preserve ECS draining and HTTP health-check settings."
   }
 
   assert {
-    condition     = aws_lb_listener.dynamic["http"].port == 80 && aws_lb_listener.dynamic["http"].default_action[0].type == "forward"
-    error_message = "Dynamic listener must forward to the requested dynamic target group."
+    condition     = aws_lb_listener.this["http"].port == 80 && aws_lb_listener.this["http"].default_action[0].type == "forward"
+    error_message = "Listener must forward to the requested target group."
   }
 }
