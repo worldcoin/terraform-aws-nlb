@@ -1,4 +1,4 @@
-resource "aws_lb_target_group" "dynamic" {
+resource "aws_lb_target_group" "this" {
   for_each = var.target_groups
 
   name                 = format("%s-%s", local.short_name, each.key)
