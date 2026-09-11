@@ -202,6 +202,17 @@ variable "enable_deletion_protection" {
   default     = true
 }
 
+variable "enforce_security_group_inbound_rules_on_private_link_traffic" {
+  description = "Whether the NLB security group inbound rules are enforced on traffic arriving through AWS PrivateLink (for example API Gateway VPC Links). Valid values are \"on\" and \"off\"; null keeps the AWS default (\"on\")."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.enforce_security_group_inbound_rules_on_private_link_traffic == null || contains(["on", "off"], var.enforce_security_group_inbound_rules_on_private_link_traffic)
+    error_message = "enforce_security_group_inbound_rules_on_private_link_traffic must be \"on\", \"off\" or null."
+  }
+}
+
 variable "enable_cross_zone_load_balancing" {
   description = "If true, cross-zone load balancing is enabled (NLB routes to targets in any AZ regardless of which AZ the LB node received the traffic on). Disabling can reduce cross-AZ data-transfer charges, but the NLB node in a given AZ will drop traffic when no healthy targets exist in that AZ. Defaults to true to preserve prior behavior."
   type        = bool
