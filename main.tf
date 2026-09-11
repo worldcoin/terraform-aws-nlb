@@ -15,6 +15,8 @@ resource "aws_lb" "nlb" {
   dns_record_client_routing_policy = var.dns_record_client_routing_policy
   enable_deletion_protection       = var.enable_deletion_protection
 
+  enforce_security_group_inbound_rules_on_private_link_traffic = var.enforce_security_group_inbound_rules_on_private_link_traffic
+
   # var.tags fully replaces (not merges with) local.default_tags, so a non-cluster
   # NLB can drop elbv2.k8s.aws/cluster entirely instead of just blanking it.
   tags = length(var.tags) > 0 ? var.tags : merge(local.default_tags, {
