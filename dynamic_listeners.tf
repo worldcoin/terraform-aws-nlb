@@ -54,7 +54,7 @@ resource "aws_lb_target_group" "this" {
   }
 }
 
-resource "aws_lb_listener" "dynamic" {
+resource "aws_lb_listener" "this" {
   for_each = var.listeners
 
   load_balancer_arn = aws_lb.nlb.arn
