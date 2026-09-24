@@ -196,6 +196,36 @@ variable "ingress_sg_rules" {
   }
 }
 
+variable "egress_sg_rules" {
+  description = "Replacement outbound rules for the NLB security group. Omitted or null preserves unrestricted IPv4 egress; [] removes all outbound rules. Include target and health-check ports when restricting egress."
+  type = set(object({
+    description      = optional(string, "")
+    protocol         = string
+    from_port        = number
+    to_port          = number
+    security_groups  = optional(list(string), [])
+    cidr_blocks      = optional(list(string), [])
+    ipv6_cidr_blocks = optional(list(string), [])
+  }))
+  default = [{
+    description = "Allow all for egress"
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
+  }]
+  nullable = false
+
+  validation {
+    condition = alltrue([
+      for rule in var.egress_sg_rules : rule == null ? false : (
+        length(rule.security_groups) + length(rule.cidr_blocks) + length(rule.ipv6_cidr_blocks) > 0
+      )
+    ])
+    error_message = "Each egress rule must specify at least one security group, IPv4 CIDR or IPv6 CIDR destination."
+  }
+}
+
 variable "enable_deletion_protection" {
   description = "If true, deletion of the load balancer will be disabled via the AWS API"
   type        = bool

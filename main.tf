@@ -85,14 +85,19 @@ resource "aws_security_group" "nlb" {
     }
   }
 
+  # Attribute syntax ensures [] removes existing rules instead of leaving them unmanaged.
   #trivy:ignore:aws-vpc-no-public-egress-sgr
-  egress {
-    description = "Allow all for egress"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  egress = [for rule in var.egress_sg_rules : {
+    description      = rule.description
+    from_port        = rule.from_port
+    to_port          = rule.to_port
+    protocol         = rule.protocol
+    security_groups  = rule.security_groups
+    cidr_blocks      = rule.cidr_blocks
+    ipv6_cidr_blocks = rule.ipv6_cidr_blocks
+    prefix_list_ids  = []
+    self             = false
+  }]
 }
 
 resource "aws_lb_listener_certificate" "extra" {
