@@ -197,7 +197,7 @@ variable "ingress_sg_rules" {
 }
 
 variable "egress_sg_rules" {
-  description = "Replacement outbound rules for the NLB security group. Omitted or null preserves unrestricted IPv4 egress; [] removes all outbound rules. Include target and health-check ports when restricting egress."
+  description = "Outbound rules for the NLB security group. Defaults to unrestricted IPv4 egress; set [] to remove all outbound rules. Include target and health-check ports when restricting egress."
   type = set(object({
     description      = optional(string, "")
     protocol         = string
