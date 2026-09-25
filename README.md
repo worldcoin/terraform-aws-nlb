@@ -37,6 +37,33 @@ module "nlb" {
 
 ## Dynamic listeners and target groups
 
+### Outbound security-group rules
+
+`egress_sg_rules` configures the NLB's outbound rules. Omit it to retain the
+existing unrestricted IPv4 default. Set `[]` to remove all outbound rules.
+With a non-null default and `nullable = false`, Terraform uses the default when
+a caller passes `null`; `null` does not disable egress. Do not manage this
+security group's egress with separate rule resources; the module owns the
+complete inline rule set.
+
+For restricted egress, allow both target traffic and health checks. For example,
+when both use TCP port 8080:
+
+```terraform
+egress_sg_rules = [{
+  description     = "Allow target traffic and health checks"
+  protocol        = "tcp"
+  from_port       = 8080
+  to_port         = 8080
+  security_groups = [aws_security_group.targets.id]
+}]
+```
+
+Changing existing rules takes effect at apply; review target and health-check
+reachability before opting in. This input does not change ingress rules.
+
+### Listener configuration
+
 Use `target_groups` and `listeners` for workloads managed outside the AWS Load Balancer Controller, such as ECS. Their map keys are stable Terraform identities. Disable the legacy listeners, set `tags` to avoid controller tags, and scope NLB egress to the task security group.
 
 ```terraform
@@ -85,7 +112,7 @@ module "ecs_nlb" {
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.52.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.66.0 |
 
 ## Modules
 
@@ -96,14 +123,14 @@ No modules.
 | Name | Type |
 | ---- | ---- |
 | [aws_lb.nlb](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb) | resource |
-| [aws_lb_listener.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener) | resource |
 | [aws_lb_listener.extra](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener) | resource |
 | [aws_lb_listener.plain](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener) | resource |
+| [aws_lb_listener.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener) | resource |
 | [aws_lb_listener.tls](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener) | resource |
 | [aws_lb_listener_certificate.extra](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener_certificate) | resource |
-| [aws_lb_target_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group) | resource |
 | [aws_lb_target_group.extra](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group) | resource |
 | [aws_lb_target_group.plain](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group) | resource |
+| [aws_lb_target_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group) | resource |
 | [aws_lb_target_group.tls](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group) | resource |
 | [aws_security_group.nlb](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
@@ -121,8 +148,10 @@ No modules.
 | <a name="input_create_default_plain_listener"></a> [create\_default\_plain\_listener](#input\_create\_default\_plain\_listener) | If true, default listener (80) will be created (ANDed with create\_default\_listeners) | `bool` | `true` | no |
 | <a name="input_create_default_tls_listener"></a> [create\_default\_tls\_listener](#input\_create\_default\_tls\_listener) | If true, tls listener (443) will be created (ANDed with create\_default\_listeners) | `bool` | `true` | no |
 | <a name="input_dns_record_client_routing_policy"></a> [dns\_record\_client\_routing\_policy](#input\_dns\_record\_client\_routing\_policy) | DNS client routing policy controlling which AZ's NLB node IP Route 53 returns when a client resolves the NLB hostname. `any_availability_zone` (default) returns IPs from any AZ. `partial_availability_zone_affinity` returns the local-AZ IP for ~85% of clients. `availability_zone_affinity` returns the local-AZ IP for 100% of clients. Combine with `enable_cross_zone_load_balancing = false` for end-to-end AZ affinity (client → NLB node → target all in same AZ), eliminating cross-AZ data-transfer cost. Caller must ensure each AZ has ≥1 healthy target; otherwise local-AZ clients will see failures rather than fail over. | `string` | `"any_availability_zone"` | no |
+| <a name="input_egress_sg_rules"></a> [egress\_sg\_rules](#input\_egress\_sg\_rules) | Outbound rules for the NLB security group. Defaults to unrestricted IPv4 egress; set [] to remove all outbound rules. Include target and health-check ports when restricting egress. | <pre>set(object({<br/>    description      = optional(string, "")<br/>    protocol         = string<br/>    from_port        = number<br/>    to_port          = number<br/>    security_groups  = optional(list(string), [])<br/>    cidr_blocks      = optional(list(string), [])<br/>    ipv6_cidr_blocks = optional(list(string), [])<br/>  }))</pre> | <pre>[<br/>  {<br/>    "cidr_blocks": [<br/>      "0.0.0.0/0"<br/>    ],<br/>    "description": "Allow all for egress",<br/>    "from_port": 0,<br/>    "protocol": "-1",<br/>    "to_port": 0<br/>  }<br/>]</pre> | no |
 | <a name="input_enable_cross_zone_load_balancing"></a> [enable\_cross\_zone\_load\_balancing](#input\_enable\_cross\_zone\_load\_balancing) | If true, cross-zone load balancing is enabled (NLB routes to targets in any AZ regardless of which AZ the LB node received the traffic on). Disabling can reduce cross-AZ data-transfer charges, but the NLB node in a given AZ will drop traffic when no healthy targets exist in that AZ. Defaults to true to preserve prior behavior. | `bool` | `true` | no |
 | <a name="input_enable_deletion_protection"></a> [enable\_deletion\_protection](#input\_enable\_deletion\_protection) | If true, deletion of the load balancer will be disabled via the AWS API | `bool` | `true` | no |
+| <a name="input_enforce_security_group_inbound_rules_on_private_link_traffic"></a> [enforce\_security\_group\_inbound\_rules\_on\_private\_link\_traffic](#input\_enforce\_security\_group\_inbound\_rules\_on\_private\_link\_traffic) | Whether the NLB security group inbound rules are enforced on traffic arriving through AWS PrivateLink (for example API Gateway VPC Links). Valid values are "on" and "off"; null keeps the AWS default ("on"). | `string` | `null` | no |
 | <a name="input_extra_listeners"></a> [extra\_listeners](#input\_extra\_listeners) | List with configuration for additional listeners | <pre>list(object({<br/>    name              = string<br/>    port              = string<br/>    protocol          = optional(string, "TCP")<br/>    target_group_port = number<br/>  }))</pre> | `[]` | no |
 | <a name="input_health_check_port"></a> [health\_check\_port](#input\_health\_check\_port) | Port used for health check for listener | `number` | `-1` | no |
 | <a name="input_ingress_sg_rules"></a> [ingress\_sg\_rules](#input\_ingress\_sg\_rules) | The security group rules to allow ingress from. | <pre>set(object({<br/>    description      = optional(string, "")<br/>    protocol         = optional(string, "tcp")<br/>    port             = optional(number, 443)<br/>    security_groups  = optional(list(string))<br/>    cidr_blocks      = optional(list(string))<br/>    ipv6_cidr_blocks = optional(list(string))<br/>  }))</pre> | <pre>[<br/>  {<br/>    "cidr_blocks": [<br/>      "0.0.0.0/0"<br/>    ],<br/>    "description": "allow http from anywhere",<br/>    "port": 80<br/>  },<br/>  {<br/>    "description": "allow http from anywhere",<br/>    "ipv6_cidr_blocks": [<br/>      "::/0"<br/>    ],<br/>    "port": 80<br/>  },<br/>  {<br/>    "cidr_blocks": [<br/>      "0.0.0.0/0"<br/>    ],<br/>    "description": "allow https from anywhere",<br/>    "port": 443<br/>  },<br/>  {<br/>    "description": "allow https from anywhere",<br/>    "ipv6_cidr_blocks": [<br/>      "::/0"<br/>    ],<br/>    "port": 443<br/>  }<br/>]</pre> | no |
