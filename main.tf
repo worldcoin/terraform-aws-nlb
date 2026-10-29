@@ -87,7 +87,7 @@ resource "aws_security_group" "nlb" {
 
   # Attribute syntax ensures [] removes existing rules instead of leaving them unmanaged.
   #trivy:ignore:aws-vpc-no-public-egress-sgr
-  egress = [for rule in var.egress_sg_rules : {
+  egress = [for rule in local.egress_sg_rules : {
     description      = rule.description
     from_port        = rule.from_port
     to_port          = rule.to_port

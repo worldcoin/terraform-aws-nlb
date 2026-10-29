@@ -197,7 +197,7 @@ variable "ingress_sg_rules" {
 }
 
 variable "egress_sg_rules" {
-  description = "Outbound rules for the NLB security group. Defaults to unrestricted IPv4 egress; set [] to remove all outbound rules. Include target and health-check ports when restricting egress."
+  description = "Replacement outbound rules for the NLB security group. Omitted or null uses all ports/protocols within the VPC's associated IPv4 CIDRs. Set [] to remove all outbound rules; use explicit rules for IPv6 or cross-VPC destinations."
   type = set(object({
     description      = optional(string, "")
     protocol         = string
@@ -207,17 +207,10 @@ variable "egress_sg_rules" {
     cidr_blocks      = optional(list(string), [])
     ipv6_cidr_blocks = optional(list(string), [])
   }))
-  default = [{
-    description = "Allow all for egress"
-    protocol    = "-1"
-    from_port   = 0
-    to_port     = 0
-    cidr_blocks = ["0.0.0.0/0"]
-  }]
-  nullable = false
+  default = null
 
   validation {
-    condition = alltrue([
+    condition = var.egress_sg_rules == null ? true : alltrue([
       for rule in var.egress_sg_rules : rule == null ? false : (
         length(rule.security_groups) + length(rule.cidr_blocks) + length(rule.ipv6_cidr_blocks) > 0
       )

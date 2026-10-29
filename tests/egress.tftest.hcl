@@ -11,26 +11,26 @@ variables {
   create_default_listeners = false
 }
 
-run "default_preserves_existing_egress" {
+run "default_allows_vpc_ports_and_associated_cidrs" {
   command = plan
 
   assert {
     condition = jsonencode(aws_security_group.nlb.egress) == jsonencode([{
-      description      = "Allow all for egress"
+      description      = "Allow backend and health-check traffic within the VPC"
       protocol         = "-1"
       from_port        = 0
       to_port          = 0
-      cidr_blocks      = ["0.0.0.0/0"]
+      cidr_blocks      = ["10.0.0.0/16", "10.1.0.0/16"]
       ipv6_cidr_blocks = []
       security_groups  = []
       prefix_list_ids  = []
       self             = false
     }])
-    error_message = "Existing callers must retain exactly the original unrestricted IPv4 rule."
+    error_message = "Default egress must allow all VPC target ports, include associated IPv4 ranges and exclude disassociating ranges."
   }
 }
 
-run "null_preserves_existing_egress" {
+run "null_uses_vpc_default" {
   command = plan
 
   variables {
@@ -38,8 +38,8 @@ run "null_preserves_existing_egress" {
   }
 
   assert {
-    condition     = length(aws_security_group.nlb.egress) == 1 && one(aws_security_group.nlb.egress).protocol == "-1" && toset(one(aws_security_group.nlb.egress).cidr_blocks) == toset(["0.0.0.0/0"])
-    error_message = "Null must use the backwards-compatible default."
+    condition     = length(aws_security_group.nlb.egress) == 1 && one(aws_security_group.nlb.egress).protocol == "-1" && toset(one(aws_security_group.nlb.egress).cidr_blocks) == toset(["10.0.0.0/16", "10.1.0.0/16"])
+    error_message = "An explicit null must inherit the VPC-scoped default."
   }
 }
 
@@ -87,6 +87,16 @@ run "rejects_missing_destination" {
 
   variables {
     egress_sg_rules = [{ protocol = "tcp", from_port = 50050, to_port = 50050 }]
+  }
+
+  expect_failures = [var.egress_sg_rules]
+}
+
+run "rejects_null_rule" {
+  command = plan
+
+  variables {
+    egress_sg_rules = [null]
   }
 
   expect_failures = [var.egress_sg_rules]
