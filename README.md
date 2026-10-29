@@ -39,12 +39,14 @@ module "nlb" {
 
 ### Outbound security-group rules
 
-`egress_sg_rules` configures the NLB's outbound rules. Omit it to retain the
-existing unrestricted IPv4 default. Set `[]` to remove all outbound rules.
-With a non-null default and `nullable = false`, Terraform uses the default when
-a caller passes `null`; `null` does not disable egress. Do not manage this
-security group's egress with separate rule resources; the module owns the
-complete inline rule set.
+Omitting `egress_sg_rules` or passing `null` allows all ports and protocols to
+this VPC's associated IPv4 CIDRs. New in-VPC targets and health-check ports work
+without caller SG updates. The module reads the VPC identified by `vpc_id`.
+
+This replaces the previous unrestricted IPv4 default. Check target destinations
+before upgrading: IPv6 and cross-VPC destinations require an explicit rule set.
+Explicit rules replace the default; `[]` removes all outbound rules. Do not manage
+this SG's egress with separate rule resources; the module owns the complete set.
 
 For restricted egress, allow both target traffic and health checks. For example,
 when both use TCP port 8080:
@@ -112,7 +114,7 @@ module "ecs_nlb" {
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.66.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 5.22.0 |
 
 ## Modules
 
@@ -134,6 +136,7 @@ No modules.
 | [aws_lb_target_group.tls](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group) | resource |
 | [aws_security_group.nlb](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
+| [aws_vpc.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/vpc) | data source |
 
 ## Inputs
 
@@ -148,7 +151,7 @@ No modules.
 | <a name="input_create_default_plain_listener"></a> [create\_default\_plain\_listener](#input\_create\_default\_plain\_listener) | If true, default listener (80) will be created (ANDed with create\_default\_listeners) | `bool` | `true` | no |
 | <a name="input_create_default_tls_listener"></a> [create\_default\_tls\_listener](#input\_create\_default\_tls\_listener) | If true, tls listener (443) will be created (ANDed with create\_default\_listeners) | `bool` | `true` | no |
 | <a name="input_dns_record_client_routing_policy"></a> [dns\_record\_client\_routing\_policy](#input\_dns\_record\_client\_routing\_policy) | DNS client routing policy controlling which AZ's NLB node IP Route 53 returns when a client resolves the NLB hostname. `any_availability_zone` (default) returns IPs from any AZ. `partial_availability_zone_affinity` returns the local-AZ IP for ~85% of clients. `availability_zone_affinity` returns the local-AZ IP for 100% of clients. Combine with `enable_cross_zone_load_balancing = false` for end-to-end AZ affinity (client → NLB node → target all in same AZ), eliminating cross-AZ data-transfer cost. Caller must ensure each AZ has ≥1 healthy target; otherwise local-AZ clients will see failures rather than fail over. | `string` | `"any_availability_zone"` | no |
-| <a name="input_egress_sg_rules"></a> [egress\_sg\_rules](#input\_egress\_sg\_rules) | Outbound rules for the NLB security group. Defaults to unrestricted IPv4 egress; set [] to remove all outbound rules. Include target and health-check ports when restricting egress. | <pre>set(object({<br/>    description      = optional(string, "")<br/>    protocol         = string<br/>    from_port        = number<br/>    to_port          = number<br/>    security_groups  = optional(list(string), [])<br/>    cidr_blocks      = optional(list(string), [])<br/>    ipv6_cidr_blocks = optional(list(string), [])<br/>  }))</pre> | <pre>[<br/>  {<br/>    "cidr_blocks": [<br/>      "0.0.0.0/0"<br/>    ],<br/>    "description": "Allow all for egress",<br/>    "from_port": 0,<br/>    "protocol": "-1",<br/>    "to_port": 0<br/>  }<br/>]</pre> | no |
+| <a name="input_egress_sg_rules"></a> [egress\_sg\_rules](#input\_egress\_sg\_rules) | Replacement outbound rules for the NLB security group. Omitted or null uses all ports/protocols within the VPC's associated IPv4 CIDRs. Set [] to remove all outbound rules; use explicit rules for IPv6 or cross-VPC destinations. | <pre>set(object({<br/>    description      = optional(string, "")<br/>    protocol         = string<br/>    from_port        = number<br/>    to_port          = number<br/>    security_groups  = optional(list(string), [])<br/>    cidr_blocks      = optional(list(string), [])<br/>    ipv6_cidr_blocks = optional(list(string), [])<br/>  }))</pre> | `null` | no |
 | <a name="input_enable_cross_zone_load_balancing"></a> [enable\_cross\_zone\_load\_balancing](#input\_enable\_cross\_zone\_load\_balancing) | If true, cross-zone load balancing is enabled (NLB routes to targets in any AZ regardless of which AZ the LB node received the traffic on). Disabling can reduce cross-AZ data-transfer charges, but the NLB node in a given AZ will drop traffic when no healthy targets exist in that AZ. Defaults to true to preserve prior behavior. | `bool` | `true` | no |
 | <a name="input_enable_deletion_protection"></a> [enable\_deletion\_protection](#input\_enable\_deletion\_protection) | If true, deletion of the load balancer will be disabled via the AWS API | `bool` | `true` | no |
 | <a name="input_enforce_security_group_inbound_rules_on_private_link_traffic"></a> [enforce\_security\_group\_inbound\_rules\_on\_private\_link\_traffic](#input\_enforce\_security\_group\_inbound\_rules\_on\_private\_link\_traffic) | Whether the NLB security group inbound rules are enforced on traffic arriving through AWS PrivateLink (for example API Gateway VPC Links). Valid values are "on" and "off"; null keeps the AWS default ("on"). | `string` | `null` | no |
@@ -176,6 +179,7 @@ No modules.
 | <a name="output_dns_name"></a> [dns\_name](#output\_dns\_name) | The DNS name of the NLB. |
 | <a name="output_listener_arns"></a> [listener\_arns](#output\_listener\_arns) | ARNs of listeners created from listeners, keyed by listener name. |
 | <a name="output_ready"></a> [ready](#output\_ready) | Hack! Because modules with providers (cluster-apps) cannot use depends\_on output value needs to be used to make sure those are provisioned in correct order. |
+| <a name="output_sg_egress_rules"></a> [sg\_egress\_rules](#output\_sg\_egress\_rules) | Outbound rules for the NLB security group. |
 | <a name="output_sg_nlb_id"></a> [sg\_nlb\_id](#output\_sg\_nlb\_id) | The ID of the security group attached to NLB |
 | <a name="output_ssl_policy"></a> [ssl\_policy](#output\_ssl\_policy) | SSL Policy attached to loadbalancer |
 | <a name="output_target_group_arns"></a> [target\_group\_arns](#output\_target\_group\_arns) | ARNs of target groups created from target\_groups, keyed by target group name. |

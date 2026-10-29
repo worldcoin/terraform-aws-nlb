@@ -31,6 +31,11 @@ output "sg_nlb_id" {
   value       = aws_security_group.nlb.id
 }
 
+output "sg_egress_rules" {
+  description = "Outbound rules for the NLB security group."
+  value       = aws_security_group.nlb.egress
+}
+
 output "target_group_arns" {
   description = "ARNs of target groups created from target_groups, keyed by target group name."
   value       = { for name, target_group in aws_lb_target_group.this : name => target_group.arn }
