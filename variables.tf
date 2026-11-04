@@ -104,7 +104,7 @@ variable "security_group_ids" {
   nullable    = false
 
   validation {
-    condition     = alltrue([for id in var.security_group_ids : can(regex("^sg-[a-z0-9]+$", id))])
+    condition     = alltrue([for id in var.security_group_ids : can(regex("^sg-([0-9a-f]{8}|[0-9a-f]{17})$", id))])
     error_message = "Each security_group_ids entry must be a security group ID."
   }
 }

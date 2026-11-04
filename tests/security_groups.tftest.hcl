@@ -40,7 +40,7 @@ run "existing_groups_without_managed_group" {
 
   variables {
     create_security_group = false
-    security_group_ids    = ["sg-00000000000000001", "sg-00000000000000002"]
+    security_group_ids    = ["sg-1234abcd", "sg-00000000000000002"]
   }
 
   assert {
@@ -103,6 +103,26 @@ run "rejects_invalid_group_id" {
 
   variables {
     security_group_ids = ["not-a-security-group"]
+  }
+
+  expect_failures = [var.security_group_ids]
+}
+
+run "rejects_non_hexadecimal_group_id" {
+  command = plan
+
+  variables {
+    security_group_ids = ["sg-zzzzzzzz"]
+  }
+
+  expect_failures = [var.security_group_ids]
+}
+
+run "rejects_incorrect_group_id_length" {
+  command = plan
+
+  variables {
+    security_group_ids = ["sg-abc"]
   }
 
   expect_failures = [var.security_group_ids]
