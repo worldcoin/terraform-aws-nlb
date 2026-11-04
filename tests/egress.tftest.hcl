@@ -15,7 +15,7 @@ run "default_allows_vpc_ports_and_associated_cidrs" {
   command = plan
 
   assert {
-    condition = jsonencode(aws_security_group.nlb.egress) == jsonencode([{
+    condition = jsonencode(aws_security_group.nlb[0].egress) == jsonencode([{
       description      = "Allow backend and health-check traffic within the VPC"
       protocol         = "-1"
       from_port        = 0
@@ -38,7 +38,7 @@ run "null_uses_vpc_default" {
   }
 
   assert {
-    condition     = length(aws_security_group.nlb.egress) == 1 && one(aws_security_group.nlb.egress).protocol == "-1" && toset(one(aws_security_group.nlb.egress).cidr_blocks) == toset(["10.0.0.0/16", "10.1.0.0/16"])
+    condition     = length(aws_security_group.nlb[0].egress) == 1 && one(aws_security_group.nlb[0].egress).protocol == "-1" && toset(one(aws_security_group.nlb[0].egress).cidr_blocks) == toset(["10.0.0.0/16", "10.1.0.0/16"])
     error_message = "An explicit null must inherit the VPC-scoped default."
   }
 }
@@ -51,7 +51,7 @@ run "empty_manages_no_outbound_rules" {
   }
 
   assert {
-    condition     = length(aws_security_group.nlb.egress) == 0
+    condition     = length(aws_security_group.nlb[0].egress) == 0
     error_message = "An explicit empty collection must clear outbound rules."
   }
 }
@@ -70,8 +70,8 @@ run "restricted_target_and_health_check_ports" {
   }
 
   assert {
-    condition = length(aws_security_group.nlb.egress) == 2 && alltrue([
-      for rule in aws_security_group.nlb.egress : (
+    condition = length(aws_security_group.nlb[0].egress) == 2 && alltrue([
+      for rule in aws_security_group.nlb[0].egress : (
         rule.protocol == "tcp" && rule.from_port == rule.to_port &&
         contains([50050, 8545], rule.to_port) &&
         rule.security_groups == toset(["sg-0123456789abcdef0"]) &&

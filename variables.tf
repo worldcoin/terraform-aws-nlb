@@ -90,6 +90,25 @@ variable "internal" {
   type        = bool
 }
 
+variable "create_security_group" {
+  description = "Create a security group for the NLB. Existing attachments are managed externally."
+  type        = bool
+  default     = true
+  nullable    = false
+}
+
+variable "security_group_ids" {
+  description = "Existing security groups to include when creating the NLB. Required when create_security_group is false."
+  type        = list(string)
+  default     = []
+  nullable    = false
+
+  validation {
+    condition     = alltrue([for id in var.security_group_ids : can(regex("^sg-[a-z0-9]+$", id))])
+    error_message = "Each security_group_ids entry must be a security group ID."
+  }
+}
+
 variable "create_default_listeners" {
   description = "If true, default listeners will be created"
   type        = bool

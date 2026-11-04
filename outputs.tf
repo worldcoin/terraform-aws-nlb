@@ -27,13 +27,13 @@ output "ssl_policy" {
 }
 
 output "sg_nlb_id" {
-  description = "The ID of the security group attached to NLB"
-  value       = aws_security_group.nlb.id
+  description = "The module-created security group ID, or null when creation is disabled."
+  value       = try(aws_security_group.nlb[0].id, null)
 }
 
 output "sg_egress_rules" {
-  description = "Outbound rules for the NLB security group."
-  value       = aws_security_group.nlb.egress
+  description = "Outbound rules for the module-created security group, or null when creation is disabled."
+  value       = try(aws_security_group.nlb[0].egress, null)
 }
 
 output "target_group_arns" {
