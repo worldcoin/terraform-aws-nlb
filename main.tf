@@ -23,12 +23,17 @@ resource "aws_lb" "nlb" {
     "${var.tag_prefix}/resource" = "LoadBalancer"
   })
 
-  security_groups = [aws_security_group.nlb.id]
+  security_groups = concat(aws_security_group.nlb[*].id, var.security_group_ids)
 
   lifecycle {
+    precondition {
+      condition     = var.create_security_group || length(var.security_group_ids) > 0
+      error_message = "Provide at least one security_group_ids entry when create_security_group is false."
+    }
+
     ignore_changes = [
       tags_all,
-      security_groups, # changing security groups forces recreation, and we don't want it
+      security_groups, # attachment changes are managed externally
     ]
   }
 }
@@ -66,7 +71,14 @@ resource "aws_lb_listener" "tls" {
   }
 }
 
+moved {
+  from = aws_security_group.nlb
+  to   = aws_security_group.nlb[0]
+}
+
 resource "aws_security_group" "nlb" {
+  count = var.create_security_group ? 1 : 0
+
   name        = substr(local.name, 0, 32)
   description = format("SG for %s", local.name)
   vpc_id      = var.vpc_id

@@ -35,6 +35,26 @@ module "nlb" {
 }
 ```
 
+## Security group ownership
+
+By default the module creates a security group. `security_group_ids` adds existing
+groups to the NLB's initial attachments. To use only existing groups:
+
+```terraform
+create_security_group = false
+security_group_ids    = [aws_security_group.frontend.id]
+```
+
+At least one existing group is required when creation is disabled. In this mode,
+`sg_nlb_id` and `sg_egress_rules` are null; `ingress_sg_rules` and
+`egress_sg_rules` apply only to module-created groups.
+
+The module ignores NLB security-group attachment changes after creation. Before
+disabling SG creation for an existing NLB, confirm its controller or operator has
+already moved attachments and other references to the existing groups. The
+declarative address move preserves managed SG identities for callers keeping the
+default.
+
 ## Dynamic listeners and target groups
 
 ### Outbound security-group rules
@@ -150,6 +170,7 @@ No modules.
 | <a name="input_create_default_listeners"></a> [create\_default\_listeners](#input\_create\_default\_listeners) | If true, default listeners will be created | `bool` | `true` | no |
 | <a name="input_create_default_plain_listener"></a> [create\_default\_plain\_listener](#input\_create\_default\_plain\_listener) | If true, default listener (80) will be created (ANDed with create\_default\_listeners) | `bool` | `true` | no |
 | <a name="input_create_default_tls_listener"></a> [create\_default\_tls\_listener](#input\_create\_default\_tls\_listener) | If true, tls listener (443) will be created (ANDed with create\_default\_listeners) | `bool` | `true` | no |
+| <a name="input_create_security_group"></a> [create\_security\_group](#input\_create\_security\_group) | Create a security group for the NLB. Existing attachments are managed externally. | `bool` | `true` | no |
 | <a name="input_dns_record_client_routing_policy"></a> [dns\_record\_client\_routing\_policy](#input\_dns\_record\_client\_routing\_policy) | DNS client routing policy controlling which AZ's NLB node IP Route 53 returns when a client resolves the NLB hostname. `any_availability_zone` (default) returns IPs from any AZ. `partial_availability_zone_affinity` returns the local-AZ IP for ~85% of clients. `availability_zone_affinity` returns the local-AZ IP for 100% of clients. Combine with `enable_cross_zone_load_balancing = false` for end-to-end AZ affinity (client → NLB node → target all in same AZ), eliminating cross-AZ data-transfer cost. Caller must ensure each AZ has ≥1 healthy target; otherwise local-AZ clients will see failures rather than fail over. | `string` | `"any_availability_zone"` | no |
 | <a name="input_egress_sg_rules"></a> [egress\_sg\_rules](#input\_egress\_sg\_rules) | Replacement outbound rules for the NLB security group. Omitted or null uses all ports/protocols within the VPC's associated IPv4 CIDRs. Set [] to remove all outbound rules; use explicit rules for IPv6 or cross-VPC destinations. | <pre>set(object({<br/>    description      = optional(string, "")<br/>    protocol         = string<br/>    from_port        = number<br/>    to_port          = number<br/>    security_groups  = optional(list(string), [])<br/>    cidr_blocks      = optional(list(string), [])<br/>    ipv6_cidr_blocks = optional(list(string), [])<br/>  }))</pre> | `null` | no |
 | <a name="input_enable_cross_zone_load_balancing"></a> [enable\_cross\_zone\_load\_balancing](#input\_enable\_cross\_zone\_load\_balancing) | If true, cross-zone load balancing is enabled (NLB routes to targets in any AZ regardless of which AZ the LB node received the traffic on). Disabling can reduce cross-AZ data-transfer charges, but the NLB node in a given AZ will drop traffic when no healthy targets exist in that AZ. Defaults to true to preserve prior behavior. | `bool` | `true` | no |
@@ -164,6 +185,7 @@ No modules.
 | <a name="input_name_suffix"></a> [name\_suffix](#input\_name\_suffix) | Part of the name used to differentiate NLBs for multiple traefik instances | `string` | `""` | no |
 | <a name="input_private_subnets"></a> [private\_subnets](#input\_private\_subnets) | List of private subnets to use | `list(string)` | `[]` | no |
 | <a name="input_public_subnets"></a> [public\_subnets](#input\_public\_subnets) | List of public subnets to use | `list(string)` | `[]` | no |
+| <a name="input_security_group_ids"></a> [security\_group\_ids](#input\_security\_group\_ids) | Existing security groups to include when creating the NLB. Required when create\_security\_group is false. | `list(string)` | `[]` | no |
 | <a name="input_tag_prefix"></a> [tag\_prefix](#input\_tag\_prefix) | Tag key prefix for LBC resource/stack tags (e.g. service.k8s.aws for Service LB, gateway.k8s.aws.nlb for Gateway API) | `string` | `"service.k8s.aws"` | no |
 | <a name="input_tag_stack"></a> [tag\_stack](#input\_tag\_stack) | Override the computed stack tag value (default: var.application) | `string` | `""` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags for the NLB and its listeners/target groups (default, extra, and Gateway API). If non-empty, these fully replace the module's default tags (`elbv2.k8s.aws/cluster`, `<tag_prefix>/resource`, `<tag_prefix>/stack`) instead of merging with them - use this for an NLB that must not be tracked/managed by an EKS AWS Load Balancer Controller. | `map(string)` | `{}` | no |
@@ -179,8 +201,8 @@ No modules.
 | <a name="output_dns_name"></a> [dns\_name](#output\_dns\_name) | The DNS name of the NLB. |
 | <a name="output_listener_arns"></a> [listener\_arns](#output\_listener\_arns) | ARNs of listeners created from listeners, keyed by listener name. |
 | <a name="output_ready"></a> [ready](#output\_ready) | Hack! Because modules with providers (cluster-apps) cannot use depends\_on output value needs to be used to make sure those are provisioned in correct order. |
-| <a name="output_sg_egress_rules"></a> [sg\_egress\_rules](#output\_sg\_egress\_rules) | Outbound rules for the NLB security group. |
-| <a name="output_sg_nlb_id"></a> [sg\_nlb\_id](#output\_sg\_nlb\_id) | The ID of the security group attached to NLB |
+| <a name="output_sg_egress_rules"></a> [sg\_egress\_rules](#output\_sg\_egress\_rules) | Outbound rules for the module-created security group, or null when creation is disabled. |
+| <a name="output_sg_nlb_id"></a> [sg\_nlb\_id](#output\_sg\_nlb\_id) | The module-created security group ID, or null when creation is disabled. |
 | <a name="output_ssl_policy"></a> [ssl\_policy](#output\_ssl\_policy) | SSL Policy attached to loadbalancer |
 | <a name="output_target_group_arns"></a> [target\_group\_arns](#output\_target\_group\_arns) | ARNs of target groups created from target\_groups, keyed by target group name. |
 | <a name="output_zone_id"></a> [zone\_id](#output\_zone\_id) | The zone ID of the NLB. |
